@@ -11,6 +11,9 @@
 
 package org.usfirst.frc4729.FRC2019.subsystems;
 
+import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.usfirst.frc4729.FRC2019.commands.*;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -79,12 +82,29 @@ public class Drive extends Subsystem {
         // Put code here to be run every loop
 
     }
-
+    
     public void omni(double forwards, double sideways, double turn) {
-        setMotors(0, 0, 0, 0);
+        List<Double> power = Arrays.asList(forwards + sideways + turn,  // leftFront
+                                           forwards - sideways + turn,  // leftBack
+                                          -forwards + sideways + turn,  // rightFront
+                                          -forwards - sideways + turn); // rightBack
+                                          
+        double max = power.stream().map(p -> Math.abs(p)).max((a, b) -> {
+            Double difference = a - b;
+            return difference.intValue();
+        }).get();
+
+        if (max > 1) {
+            power = power.stream().map(p -> p / max).collect(Collectors.toList());
+        }
+
+        setMotors(power.get(0).doubleValue(),
+                  power.get(1).doubleValue(),
+                  power.get(2).doubleValue(),
+                  power.get(3).doubleValue());
     }
 
-    private void setMotors(double leftFront, double leftBack, double rightFront, double rightBack) {
+    public void setMotors(double leftFront, double leftBack, double rightFront, double rightBack) {
         leftFrontMotor.set(leftFront);
         leftBackMotor.set(leftBack);
         rightFrontMotor.set(rightFront);
