@@ -8,13 +8,19 @@
 package org.usfirst.frc4729.FRC2019.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.osgi.OpenCVInterface;
+
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
+import org.opencv.core.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Add your docs here.
@@ -37,7 +43,7 @@ public class Vision extends Subsystem {
             while (!Thread.interrupted()) {
                 cvSink.grabFrame(source);
                 if (!source.empty()) {
-                    Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+                    processFrame(source, output);
                     outputStream.putFrame(output);
                 }
             }
@@ -47,6 +53,40 @@ public class Vision extends Subsystem {
     public void stopCamera() {
         CameraServer.getInstance().removeCamera("USB Camera 0");
         CameraServer.getInstance().removeCamera("Auto");
+    }
+
+    private double threshold = 127;
+    private int elementType = Imgproc.CV_SHAPE_ELLIPSE;
+    private int kernelSize = 2;
+    Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
+    private void processFrame(Mat source, Mat output) {
+        Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(output, output, threshold, 255, Imgproc.THRESH_BINARY);
+        Imgproc.erode(output, output, element);
+        Imgproc.dilate(output, output, element);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(output, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        if (contours.size() > 0) {
+            RotatedRect rect = contours.stream().map(contour -> Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()))).max((a, b) -> {
+                Double difference = (a.size.width * a.size.height) - (b.size.width * b.size.height);
+                return difference.intValue();
+            }).get();
+            Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
+            Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
+            double length = rect.size.width;
+            if (rect.size.height > rect.size.width) {
+                length = rect.size.height;
+                rect.angle += 90;
+            }
+            Point end1 = pointAddVector(rect.center.x, rect.center.y, rect.angle, length / 2);
+            Point end2 = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
+            Imgproc.circle(output, new Point(end1.x, end1.y), 5, new Scalar(0, 255, 0));
+            Imgproc.circle(output, new Point(end2.x, end2.y), 5, new Scalar(0, 255, 0));
+        }
+    }
+
+    Point pointAddVector(double x, double y, double a, double d) {
+        return new Point(x + Math.cos(Math.toRadians(a)) * d, y + Math.sin(Math.toRadians(a)) * d);
     }
 
     @Override
