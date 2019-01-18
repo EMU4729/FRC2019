@@ -29,6 +29,13 @@ public class Vision extends Subsystem {
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
 
+    private boolean debug = false;
+
+    public boolean available = false;
+    public boolean endVisible = false;
+    public Point offset = new Point(0, 0);
+    public double angle = 0;
+
     public void startCamera() {
         new Thread(() -> {
             UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
@@ -72,7 +79,7 @@ public class Vision extends Subsystem {
                 return difference.intValue();
             }).get();
             Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
-            // source.copyTo(output);
+            if (!debug) source.copyTo(output);
             Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
             double length = rect.size.width;
             if (rect.size.height > rect.size.width) {
@@ -83,10 +90,63 @@ public class Vision extends Subsystem {
             Point end2 = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
             Point end = end1;
             Point middle = new Point(output.width() / 2, output.height() / 2);
-            if (distanceBetweenPoints(end2, middle) < distanceBetweenPoints(end1, middle)) {
+            double distanceDifference = distanceBetweenPoints(end1, middle) - distanceBetweenPoints(end2, middle);
+            if (distanceDifference > 3) {
                 end = end2;
+            } else if (distanceDifference <= 3 && distanceDifference > -3) {
+                if (end2.y > end1.y) {
+                    end = end2;
+                }
             }
             Imgproc.circle(output, new Point(end.x, end.y), 5, new Scalar(0, 255, 0));
+            endVisible = (end.x > 1 &&
+                          end.x < output.width() - 1 &&
+                          end.y > 1 &&
+                          end.y < output.height() - 1);
+            boolean bothEndsVisible = (end1.x > 1 &&
+                                       end1.x < output.width() - 1 &&
+                                       end1.y > 1 &&
+                                       end1.y < output.height() - 1 &&
+                                       end2.x > 1 &&
+                                       end2.x < output.width() - 1 &&
+                                       end2.y > 1 &&
+                                       end2.y < output.height() - 1);
+            offset.x = end.x - output.width() / 2;
+            offset.y = end.y - output.height() / 2;
+            
+            if (end1.y < end2.y) {
+                angle = angleBetweenPoints(end2, end1);
+            } else {
+                angle = angleBetweenPoints(end1, end2);
+            }
+            angle = Math.toDegrees(angle);
+            angle += 90;
+            
+            if (bothEndsVisible) {
+                available = false;
+                endVisible = false;
+                offset.x = 0;
+                offset.y = 0;
+                angle = 0;
+                System.out.println("=====");
+                System.out.println(end1.x);
+                System.out.println(end1.x);
+                System.out.println("===");
+                System.out.println(end2.x);
+                System.out.println(end2.x);
+                System.out.println("=====");
+            } else {
+                available = true;
+            }
+            SmartDashboard.putBoolean("available", available);
+            SmartDashboard.putNumber("end.x", end.x);
+            SmartDashboard.putNumber("end.y", end.y);
+            SmartDashboard.putNumber("output.width()", output.width());
+            SmartDashboard.putNumber("output.height()", output.height());
+            SmartDashboard.putBoolean("endVisible", endVisible);
+            SmartDashboard.putNumber("offset.x", offset.x);
+            SmartDashboard.putNumber("offset.y", offset.y);
+            SmartDashboard.putNumber("angle", angle);
         }
     }
 
@@ -96,6 +156,10 @@ public class Vision extends Subsystem {
 
     double distanceBetweenPoints(Point a, Point b) {
         return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+    }
+
+    double angleBetweenPoints(Point a, Point b) {
+        return Math.atan2(b.y - a.y, b.x - a.x);
     }
 
     @Override
