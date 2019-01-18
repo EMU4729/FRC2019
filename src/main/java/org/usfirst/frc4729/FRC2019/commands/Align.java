@@ -24,31 +24,33 @@ public class Align extends Command {
     double sideways = 0;
     double turn = 0;
 
-    //is the line in the center
-    if (Robot.vision.offset.x > 10){
-      //go right
-      sideways = 1;
-    } else if (Robot.vision.offset.y < -10) {
-      //go left
-      sideways = -1;
-    }
+    if (Robot.vision.available) {
+      //is the line in the center
+      if (Robot.vision.offset.x > 10){
+        //go right
+        sideways = 1;
+      } else if (Robot.vision.offset.y < -10) {
+        //go left
+        sideways = -1;
+      }
 
-    //can you see end of line
-    if (Robot.vision.endVisible == true) {
-      //go foward
-      forwards = 1;
-    } else if (Robot.vision.endVisible == false) {
-      //stop
-      forwards = 0;
-    }
+      //can you see end of line
+      if (Robot.vision.endVisible == true) {
+        //go foward
+        forwards = 1;
+      } else if (Robot.vision.endVisible == false) {
+        //stop
+        forwards = 0;
+      }
 
-    //is the line straight
-    if (Robot.vision.angle > 5) {
-      //rotate right
-      turn = 1;
-    } else if (Robot.vision.angle < -5) {
-      //rotate left
-      turn = -1;
+      //is the line straight
+      if (Robot.vision.angle > 5) {
+        //rotate right
+        turn = 1;
+      } else if (Robot.vision.angle < -5) {
+        //rotate left
+        turn = -1;
+      }
     }
 
     Robot.drive.omni(forwards, sideways, turn);
