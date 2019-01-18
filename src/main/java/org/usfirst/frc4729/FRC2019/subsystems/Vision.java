@@ -72,6 +72,7 @@ public class Vision extends Subsystem {
                 return difference.intValue();
             }).get();
             Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
+            // source.copyTo(output);
             Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
             double length = rect.size.width;
             if (rect.size.height > rect.size.width) {
@@ -80,13 +81,21 @@ public class Vision extends Subsystem {
             }
             Point end1 = pointAddVector(rect.center.x, rect.center.y, rect.angle, length / 2);
             Point end2 = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
-            Imgproc.circle(output, new Point(end1.x, end1.y), 5, new Scalar(0, 255, 0));
-            Imgproc.circle(output, new Point(end2.x, end2.y), 5, new Scalar(0, 255, 0));
+            Point end = end1;
+            Point middle = new Point(output.width() / 2, output.height() / 2);
+            if (distanceBetweenPoints(end2, middle) < distanceBetweenPoints(end1, middle)) {
+                end = end2;
+            }
+            Imgproc.circle(output, new Point(end.x, end.y), 5, new Scalar(0, 255, 0));
         }
     }
 
     Point pointAddVector(double x, double y, double a, double d) {
         return new Point(x + Math.cos(Math.toRadians(a)) * d, y + Math.sin(Math.toRadians(a)) * d);
+    }
+
+    double distanceBetweenPoints(Point a, Point b) {
+        return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
     }
 
     @Override
