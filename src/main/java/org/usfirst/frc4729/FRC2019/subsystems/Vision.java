@@ -2,7 +2,7 @@
 /* Copyright (c) 2018 FIRST. All Rights Reserved.                                                         */
 /* Open Source Software - may be modified and shared by FRC teams. The code     */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                                                                                             */
+/* the project.                                                                                                                            */
 /*----------------------------------------------------------------------------*/
 
 package org.usfirst.frc4729.FRC2019.subsystems;
@@ -37,25 +37,12 @@ public class Vision extends Subsystem {
     public Point offset = new Point(0, 0);
     public double angle = 0;
 
+    static final int GAFFER = 1;
+    static final int RETROREFLECTIVE = 2;
+
     public void startCamera() {
-        new Thread(() -> {
-            UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-            camera.setResolution(160, 120);
-
-            CvSink cvSink = CameraServer.getInstance().getVideo();
-            CvSource outputStream = CameraServer.getInstance().putVideo("Auto", 160, 120);
-
-            Mat source = new Mat();
-            Mat output = new Mat();
-
-            while (!Thread.interrupted()) {
-                cvSink.grabFrame(source);
-                if (!source.empty()) {
-                    processFrame(source, output);
-                    outputStream.putFrame(output);
-                }
-            }
-        }).start();
+        setupCamera(GAFFER, "Gaffer", 160, 120);
+        setupCamera(RETROREFLECTIVE, "Retroreflective", 160, 120);
     }
 
     public void stopCamera() {
@@ -63,12 +50,37 @@ public class Vision extends Subsystem {
         CameraServer.getInstance().removeCamera("Auto");
     }
 
+    private void setupCamera(int camera, String label, int width, int height) {
+        new Thread(() -> {
+            UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+            camera.setResolution(width, height);
+
+            CvSink cvSink = CameraServer.getInstance().getVideo();
+            CvSource outputStream = CameraServer.getInstance().putVideo(label, width, height);
+
+            Mat source = new Mat();
+            Mat output = new Mat();
+
+            while (!Thread.interrupted()) {
+                cvSink.grabFrame(source);
+                if (!source.empty()) {
+                    if (camera == GAFFER) {
+                        processGaffer(source, output);
+                    } else if (camera == RETROREFLECTIVE) {
+                        processRetroreflective(source, output);
+                    }
+                    outputStream.putFrame(output);
+                }
+            }
+        }).start();
+    }
+
     private double threshold = 127;
     private int elementType = Imgproc.CV_SHAPE_ELLIPSE;
     private int kernelSize = 2;
     Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
     
-    private void processFrame(Mat source, Mat output) {
+    private void processGaffer(Mat source, Mat output) {
         List<RotatedRect> rects = findRects(source, output);
 
         if (rects.size() > 0) {
@@ -147,6 +159,10 @@ public class Vision extends Subsystem {
             SmartDashboard.putNumber("offset.y", offset.y);
             SmartDashboard.putNumber("angle", angle);
         }
+    }
+
+    private void processRectroreflective() {
+
     }
 
     private List<RotatedRect> findRects(Mat source, Mat output) {
