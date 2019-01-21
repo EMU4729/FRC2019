@@ -9,7 +9,7 @@ public class Align extends Command {
     // Use requires() here to declare subsystem dependencies
     // eg. requires(chassis);
     requires(Robot.vision);
-    requires(Robot.drive);
+    // requires(Robot.drive);
   }
 
   // Called just before this Command runs the first time
@@ -53,7 +53,7 @@ public class Align extends Command {
       }
     }
 
-    Robot.drive.omni(forwards, sideways, turn);
+    // Robot.drive.omni(forwards, sideways, turn);
   }
 
   // Make this return true when this Command no longer needs to run execute()

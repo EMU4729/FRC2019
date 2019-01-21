@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.CameraServer;
 import org.opencv.core.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Add your docs here.
@@ -29,7 +30,7 @@ public class Vision extends Subsystem {
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
 
-    private boolean debug = false;
+    private boolean debug = true;
 
     public boolean available = false;
     public boolean endVisible = false;
@@ -66,31 +67,34 @@ public class Vision extends Subsystem {
     private int elementType = Imgproc.CV_SHAPE_ELLIPSE;
     private int kernelSize = 2;
     Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
+    
     private void processFrame(Mat source, Mat output) {
-        Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.threshold(output, output, threshold, 255, Imgproc.THRESH_BINARY);
-        Imgproc.erode(output, output, element);
-        Imgproc.dilate(output, output, element);
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(output, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        if (contours.size() > 0) {
-            RotatedRect rect = contours.stream().map(contour -> Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()))).max((a, b) -> {
+        List<RotatedRect> rects = findRects(source, output);
+
+        if (rects.size() > 0) {
+            RotatedRect rect = rects.stream().max((a, b) -> {
                 Double difference = (a.size.width * a.size.height) - (b.size.width * b.size.height);
                 return difference.intValue();
             }).get();
+
             Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
+
             if (!debug) source.copyTo(output);
+
             Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
+
             double length = rect.size.width;
             if (rect.size.height > rect.size.width) {
                 length = rect.size.height;
                 rect.angle += 90;
             }
+
             Point end1 = pointAddVector(rect.center.x, rect.center.y, rect.angle, length / 2);
             Point end2 = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
             Point end = end1;
             Point middle = new Point(output.width() / 2, output.height() / 2);
             double distanceDifference = distanceBetweenPoints(end1, middle) - distanceBetweenPoints(end2, middle);
+            
             if (distanceDifference > 3) {
                 end = end2;
             } else if (distanceDifference <= 3 && distanceDifference > -3) {
@@ -98,6 +102,7 @@ public class Vision extends Subsystem {
                     end = end2;
                 }
             }
+
             Imgproc.circle(output, new Point(end.x, end.y), 5, new Scalar(0, 255, 0));
             endVisible = (end.x > 1 &&
                           end.x < output.width() - 1 &&
@@ -128,16 +133,10 @@ public class Vision extends Subsystem {
                 offset.x = 0;
                 offset.y = 0;
                 angle = 0;
-                System.out.println("=====");
-                System.out.println(end1.x);
-                System.out.println(end1.x);
-                System.out.println("===");
-                System.out.println(end2.x);
-                System.out.println(end2.x);
-                System.out.println("=====");
             } else {
                 available = true;
             }
+
             SmartDashboard.putBoolean("available", available);
             SmartDashboard.putNumber("end.x", end.x);
             SmartDashboard.putNumber("end.y", end.y);
@@ -148,6 +147,18 @@ public class Vision extends Subsystem {
             SmartDashboard.putNumber("offset.y", offset.y);
             SmartDashboard.putNumber("angle", angle);
         }
+    }
+
+    private List<RotatedRect> findRects(Mat source, Mat output) {
+        Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(output, output, threshold, 255, Imgproc.THRESH_BINARY);
+        Imgproc.erode(output, output, element);
+        Imgproc.dilate(output, output, element);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(output, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        
+        return contours.stream().map(contour -> Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()))).collect(Collectors.toList());
     }
 
     Point pointAddVector(double x, double y, double a, double d) {
