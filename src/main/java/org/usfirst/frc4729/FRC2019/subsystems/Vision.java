@@ -10,7 +10,6 @@ package org.usfirst.frc4729.FRC2019.subsystems;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.osgi.OpenCVInterface;
 
@@ -41,7 +40,7 @@ public class Vision extends Subsystem {
     static final int RETROREFLECTIVE = 2;
 
     public void startCamera() {
-        setupCamera(GAFFER, "Gaffer", 160, 120);
+        // setupCamera(GAFFER, "Gaffer", 160, 120);
         setupCamera(RETROREFLECTIVE, "Retroreflective", 160, 120);
     }
 
@@ -52,8 +51,8 @@ public class Vision extends Subsystem {
 
     private void setupCamera(int camera, String label, int width, int height) {
         new Thread(() -> {
-            UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-            camera.setResolution(width, height);
+            UsbCamera newCamera = CameraServer.getInstance().startAutomaticCapture();
+            newCamera.setResolution(width, height);
 
             CvSink cvSink = CameraServer.getInstance().getVideo();
             CvSource outputStream = CameraServer.getInstance().putVideo(label, width, height);
@@ -67,7 +66,7 @@ public class Vision extends Subsystem {
                     if (camera == GAFFER) {
                         processGaffer(source, output);
                     } else if (camera == RETROREFLECTIVE) {
-                        processRetroreflective(source, output);
+                        processRectroreflective(source, output);
                     }
                     outputStream.putFrame(output);
                 }
@@ -81,6 +80,9 @@ public class Vision extends Subsystem {
     Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
     
     private void processGaffer(Mat source, Mat output) {
+        Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(output, output, threshold, 255, Imgproc.THRESH_BINARY);
+
         List<RotatedRect> rects = findRects(source, output);
 
         if (rects.size() > 0) {
@@ -161,13 +163,47 @@ public class Vision extends Subsystem {
         }
     }
 
-    private void processRectroreflective() {
+    double targetH = 110;
+    double rangeH = 40;
+    double minS = 128;
+    double minV = 128;
+
+
+    private void processRectroreflective(Mat source, Mat output) {
+        //angle mirror, width and height
+        Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2HSV);
+        Core.inRange(output, new Scalar(targetH - rangeH / 2, minS, minV), 
+                             new Scalar(targetH + rangeH / 2, 255, 255), output);
+        
+        List<RotatedRect> rects = findRects(source, output);
+        List<RotatedRect> right = new ArrayList<RotatedRect>();
+        List<RotatedRect> left = new ArrayList<RotatedRect>();
+
+        for (RotatedRect rect : rects) {
+            if (rect.angle < 90) {
+                right.add(rect);
+            } else {
+                left.add(rect);
+            }
+        }
+        
+        List<List<RotatedRect>> pairs = new ArrayList<List<RotatedRect>>();
+
+        for (RotatedRect r : right) {
+            for (RotatedRect l : left) {
+                if (Math.abs(180-r.angle - l.angle)<20) {
+                    List<RotatedRect> pair = new ArrayList<RotatedRect>();
+                    pair.add(r);
+                    pair.add(l);
+                    pairs.add(pair);
+                }
+            }
+        }
+
 
     }
 
     private List<RotatedRect> findRects(Mat source, Mat output) {
-        Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.threshold(output, output, threshold, 255, Imgproc.THRESH_BINARY);
         Imgproc.erode(output, output, element);
         Imgproc.dilate(output, output, element);
 
