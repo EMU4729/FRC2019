@@ -93,9 +93,7 @@ public class Robot extends TimedRobot {
         if (autonomousCommand != null) autonomousCommand.start();
     }
 
-    /**
-     * This function is called periodically during autonomous
-     */
+
     @Override
     public void autonomousPeriodic() {
         Scheduler.getInstance().run();
@@ -103,19 +101,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        // This makes sure that the autonomous stops running when
-        // teleop starts running. If you want the autonomous to
-        // continue until interrupted by another command, remove
-        // this line or comment it out.
         if (autonomousCommand != null) autonomousCommand.cancel();
-
-        // Omni omni = new Omni();
-        // omni.start();
     }
-
-    /**
-     * This function is called periodically during operator control
-     */
     @Override
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
