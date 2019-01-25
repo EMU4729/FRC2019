@@ -91,10 +91,6 @@ public class Mechanism extends Subsystem {
         }
     }
 
-    public void setLevel(int value) {
-        level = value;
-    }
-
     public void up() {
         if (level < levels.length - 1) {
             level++;

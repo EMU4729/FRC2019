@@ -22,7 +22,7 @@ public class DistanceSensor extends Subsystem {
   public static final double touchingWallDistance = 20;
 
   public DistanceSensor() {
-    ultrasonic = new Ultrasonic(1, 2); // TODO dab
+    ultrasonic = new Ultrasonic(1, 2);
   }
 
   public double getDistance() {

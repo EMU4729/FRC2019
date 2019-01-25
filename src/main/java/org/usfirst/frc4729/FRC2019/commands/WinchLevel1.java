@@ -7,15 +7,12 @@
 
 package org.usfirst.frc4729.FRC2019.commands;
 
-import org.usfirst.frc4729.FRC2019.Robot;
 import edu.wpi.first.wpilibj.command.Command;
 
-public class SetWinchLevel extends Command {
-  public SetWinchLevel(int level) {
+public class WinchLevel1 extends Command {
+  public WinchLevel1() {
     // Use requires() here to declare subsystem dependencies
     // eg. requires(chassis);
-
-    Robot.mechanism.setLevel(level);
   }
 
   // Called just before this Command runs the first time
