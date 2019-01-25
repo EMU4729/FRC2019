@@ -25,7 +25,7 @@ public class Auto extends CommandGroup {
     // a CommandGroup containing them would require both the chassis and the
     // arm.
 
-    addParallel(new WinchLevel1());
+    addParallel(new SetWinchLevel(0));
 
     addSequential(new FollowGaffer());
   }
