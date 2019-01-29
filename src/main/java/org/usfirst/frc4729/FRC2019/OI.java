@@ -45,7 +45,7 @@ public class OI {
 
         leftbutton3.whenPressed(new WinchUp());
         leftButton2.whenPressed(new WinchDown());
-        leftTrigger.whenPressed(new Align());
+        // leftTrigger.whenPressed(new FollowGaffer());
         leftbutton7.whenPressed(new CancelAlign());
 
         rightButton3.whenPressed(new Extend());

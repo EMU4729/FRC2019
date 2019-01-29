@@ -14,14 +14,14 @@ import org.opencv.core.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 public class Vision extends Subsystem {
     private boolean debug = true;
 
     public boolean gafferAvailable = false;
     public boolean gafferEndVisible = false;
-    public Point gafferCenter = new Point(0, 0);
-    public Point gafferOffset = new Point(0, 0);
+    public double gafferOffsetX = 0;
     public double gafferAngle = 0;
 
     public boolean retroreflectiveAvailable = false;            
@@ -57,7 +57,7 @@ public class Vision extends Subsystem {
                     if (camera == GAFFER) {
                         processGaffer(source, output);
                     } else if (camera == RETROREFLECTIVE) {
-                        processRectroreflective(source, output);
+                        processRetroreflective(source, output);
                     }
                     outputStream.putFrame(output);
                 }
@@ -88,57 +88,22 @@ public class Vision extends Subsystem {
 
             Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
 
-            double length = rect.size.width;
-            if (rect.size.height > rect.size.width) {
-                length = rect.size.height;
-                rect.angle += 90;
-            }
+            Point[] ends = findEnds(rect);
 
-            Point end1 = pointAddVector(rect.center.x, rect.center.y, rect.angle, length / 2);
-            Point end2 = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
-            Point end = end1;
-            Point middle = new Point(output.width() / 2, output.height() / 2);
-            double distanceDifference = distanceBetweenPoints(end1, middle) - distanceBetweenPoints(end2, middle);
-            
-            if (distanceDifference > 3) {
-                end = end2;
-            } else if (distanceDifference <= 3 && distanceDifference > -3) {
-                if (end2.y > end1.y) {
-                    end = end2;
-                }
-            }
+            Imgproc.circle(output, new Point(rect.center.x, rect.center.y), 5, new Scalar(0, 255, 0));
 
-            Imgproc.circle(output, new Point(end.x, end.y), 5, new Scalar(0, 255, 0));
-            gafferEndVisible = (end.x > 1 &&
-                          end.x < output.width() - 1 &&
-                          end.y > 1 &&
-                          end.y < output.height() - 1);
-            boolean bothEndsVisible = (end1.x > 1 &&
-                                       end1.x < output.width() - 1 &&
-                                       end1.y > 1 &&
-                                       end1.y < output.height() - 1 &&
-                                       end2.x > 1 &&
-                                       end2.x < output.width() - 1 &&
-                                       end2.y > 1 &&
-                                       end2.y < output.height() - 1);
-            gafferCenter.x = output.width() / 2;
-            gafferCenter.y = output.height() / 2;
-            gafferOffset.x = end.x - gafferCenter.x;
-            gafferOffset.y = end.y - gafferCenter.y;
+            boolean bothEndsVisible = endVisible(ends[0], output) && endVisible(ends[1], output);
+
+            gafferOffsetX = rect.center.x - (output.width() / 2);
             
-            if (end1.y < end2.y) {
-                gafferAngle = angleBetweenPoints(end2, end1);
-            } else {
-                gafferAngle = angleBetweenPoints(end1, end2);
-            }
-            gafferAngle = Math.toDegrees(gafferAngle);
+            sortPairByHeight(ends);
+            gafferAngle = angleBetweenPoints(ends[0], ends[1]);
             gafferAngle += 90;
             
             if (bothEndsVisible) {
                 gafferAvailable = false;
                 gafferEndVisible = false;
-                gafferOffset.x = 0;
-                gafferOffset.y = 0;
+                gafferOffsetX = 0;
                 gafferAngle = 0;
             } else {
                 gafferAvailable = true;
@@ -156,60 +121,77 @@ public class Vision extends Subsystem {
         }
     }
 
-    private static final double targetH = 110;
-    private static final double rangeH = 40;
+    private static final double targetH = 71;
+    private static final double rangeH = 20;
     private static final double minS = 128;
     private static final double minV = 128;
-    private static final double anglesMirroredTolerance = 20;
-    private static final double similarWidthsTolerance = 20;
-    private static final double similarHeightsTolerance = 20;
+    // private static final double anglesMirroredTolerance = 20;
+    private static final double similarWidthsTolerance = 40;
+    private static final double similarHeightsTolerance = 30;
 
-    private void processRectroreflective(Mat source, Mat output) {
+    private void processRetroreflective(Mat source, Mat output) {
         //remove colours that arent green
         Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2HSV);
-        Core.inRange(output, new Scalar(targetH - rangeH / 2, minS, minV), 
-                             new Scalar(targetH + rangeH / 2, 255, 255), output);
-          
-        List<RotatedRect> rects = findRects(source, output);
-        List<RotatedRect> right = new ArrayList<RotatedRect>();
-        List<RotatedRect> left = new ArrayList<RotatedRect>();
-        List<List<RotatedRect>> pairs = new ArrayList<List<RotatedRect>>();
+        Core.inRange(output,
+                     new Scalar(targetH - rangeH / 2, minS, minV), 
+                     new Scalar(targetH + rangeH / 2, 255, 255),
+                     output);
+        
+        List<RotatedRect> rects = findRects(output, output);
+        List<RotatedRect> leftRects = new ArrayList<RotatedRect>();
+        List<RotatedRect> rightRects = new ArrayList<RotatedRect>();
+        List<RotatedRect[]> pairs = new ArrayList<RotatedRect[]>();
+
+        Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
 
         for (RotatedRect rect : rects) {
-            if (rect.angle < 90) {
-                left.add(rect);
+            Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
+            double angle = retroreflectiveAngle(rect);
+            if (rect.size.width > rect.size.height) {
+                double height = rect.size.height;
+                rect.size.height = rect.size.width;
+                rect.size.width = height;
+            }
+            if (angle < 90) {
+                leftRects.add(rect);
             } else {
-                right.add(rect);
+                rightRects.add(rect);
             }
         }
 
-        for (RotatedRect r : right) {     // right = r
-            for (RotatedRect l : left) {  // left = l
-                boolean anglesMirrored = (Math.abs((r.angle - 90) - (90 - l.angle)) < anglesMirroredTolerance);
-                boolean similarWidths = (Math.abs(r.size.width - l.size.width) < similarWidthsTolerance);
-                boolean similarHeights = (Math.abs(r.size.height - l.size.height) < similarHeightsTolerance);
-                if (anglesMirrored && similarWidths && similarHeights) {
-                    List<RotatedRect> pair = new ArrayList<RotatedRect>();
-                    pair.add(r);
-                    pair.add(l);
+        for (RotatedRect left : leftRects) {
+            for (RotatedRect right : rightRects) {
+                double leftAngle = retroreflectiveAngle(left);
+                double rightAngle = retroreflectiveAngle(right);
+                // boolean anglesMirrored = (Math.abs((90 - leftAngle) - (rightAngle - 90)) < anglesMirroredTolerance);
+                boolean similarWidths = (Math.abs(left.size.width - right.size.width) < similarWidthsTolerance);
+                boolean similarHeights = (Math.abs(left.size.height - right.size.height) < similarHeightsTolerance);
+                if (/*anglesMirrored && */similarWidths && similarHeights) {
+                    RotatedRect[] pair = {left, right};
                     pairs.add(pair);
                 }
             }
         }
 
-        List<RotatedRect> pair = pairs.stream().max((a, b) -> {
-            Double difference =   (((a.get(0).size.width * a.get(0).size.height) + (a.get(1).size.width * a.get(1).size.height)) / 2)
-                                - (((b.get(0).size.width * b.get(0).size.height) + (b.get(1).size.width * b.get(1).size.height)) / 2);
+        Optional<RotatedRect[]> max = pairs.stream().max((a, b) -> {
+            Double difference =   (((a[0].size.width * a[0].size.height) + (a[1].size.width * a[1].size.height)) / 2)
+                                - (((b[0].size.width * b[0].size.height) + (b[1].size.width * b[1].size.height)) / 2);
             return difference.intValue();
-        }).get();
+        });
 
-        if (pair != null) {
+        if (max.isPresent()) {
+            RotatedRect[] pair = max.get();
             retroreflectiveAvailable = true;
-            retroreflectiveOffsetX = ((pair.get(0).center.x + pair.get(1).center.x) / 2) - (output.width() / 2);
+            retroreflectiveOffsetX =  ((pair[0].center.x + pair[1].center.x) / 2)
+                                     - (output.width() / 2);
+            Imgproc.circle(output, new Point((pair[0].center.x + pair[1].center.x) / 2, (pair[0].center.y + pair[1].center.y) / 2), 5, new Scalar(0, 255, 0));
         } else {
             retroreflectiveAvailable = false;
             retroreflectiveOffsetX = 0;
         }
+
+        SmartDashboard.putBoolean("available", retroreflectiveAvailable);
+        SmartDashboard.putNumber("offsetX", retroreflectiveOffsetX);
     }
 
     private List<RotatedRect> findRects(Mat source, Mat output) {
@@ -222,6 +204,39 @@ public class Vision extends Subsystem {
         return contours.stream().map(contour -> Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()))).collect(Collectors.toList());
     }
 
+    private Point[] findEnds(RotatedRect rect) {
+        Point[] ends = new Point[2];
+        double length = rect.size.width;
+        if (rect.size.height > rect.size.width) {
+            length = rect.size.height;
+            rect.angle += 90;
+        }
+        ends[0] = pointAddVector(rect.center.x, rect.center.y, rect.angle, length / 2);
+        ends[1] = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
+        return ends;
+    }
+
+    private boolean endVisible(Point end, Mat output) {
+        return (end.x > 1 &&
+                end.x < output.width() - 1 &&
+                end.y > 1 &&
+                end.y < output.height() - 1);
+    }
+
+    private void sortPairByHeight(Point[] ends) {
+        if (ends[1].y > ends[0].y) {
+            Point temp = ends[0];
+            ends[0] = ends[1];
+            ends[1] = temp;
+        }
+    }
+
+    private double retroreflectiveAngle(RotatedRect rect) {
+        Point[] ends = findEnds(rect);
+        sortPairByHeight(ends);
+        return -angleBetweenPoints(ends[0], ends[1]);
+    }
+
     Point pointAddVector(double x, double y, double a, double d) {
         return new Point(x + Math.cos(Math.toRadians(a)) * d, y + Math.sin(Math.toRadians(a)) * d);
     }
@@ -231,7 +246,7 @@ public class Vision extends Subsystem {
     }
 
     double angleBetweenPoints(Point a, Point b) {
-        return Math.atan2(b.y - a.y, b.x - a.x);
+        return Math.toDegrees(Math.atan2(b.y - a.y, b.x - a.x));
     }
 
     @Override
