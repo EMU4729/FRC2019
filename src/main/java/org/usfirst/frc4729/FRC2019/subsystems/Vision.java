@@ -4,12 +4,11 @@ import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import org.opencv.imgproc.Imgproc;
-import org.opencv.osgi.OpenCVInterface;
 
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.cameraserver.CameraServer;
 import org.opencv.core.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -20,33 +19,33 @@ public class Vision extends Subsystem {
     private boolean debug = true;
 
     public boolean gafferAvailable = false;
-    public boolean gafferEndVisible = false;
     public double gafferOffsetX = 0;
     public double gafferAngle = 0;
 
     public boolean retroreflectiveAvailable = false;            
     public double retroreflectiveOffsetX = 0;
 
-    static final int GAFFER = 1;
-    static final int RETROREFLECTIVE = 2;
+    private static final int GAFFER = 1;
+    private static final int RETROREFLECTIVE = 2;
+
+    private static final int gafferCameraWidth = 160;
+    private static final int gafferCameraHeight = 120;
+    private static final int retroreflectiveCameraWidth = 160;
+    private static final int retroreflectiveCameraHeight = 120;
 
     public void startCamera() {
-        // setupCamera(GAFFER, "Gaffer", 160, 120);
-        setupCamera(RETROREFLECTIVE, "Retroreflective", 160, 120);
+        // setupCamera(GAFFER, 0, "Gaffer", gafferCameraWidth, gafferCameraHeight);
+        setupCamera(RETROREFLECTIVE, 0, "Retroreflective", retroreflectiveCameraWidth, retroreflectiveCameraHeight);
     }
 
-    public void stopCamera() {
-        CameraServer.getInstance().removeCamera("USB Camera 0");
-        CameraServer.getInstance().removeCamera("Auto");
-    }
-
-    private void setupCamera(int camera, String label, int width, int height) {
+    private void setupCamera(int processor, int port, String label, int width, int height) {
         new Thread(() -> {
-            UsbCamera newCamera = CameraServer.getInstance().startAutomaticCapture();
-            newCamera.setResolution(width, height);
+            CameraServer server = CameraServer.getInstance();
+            UsbCamera camera = server.startAutomaticCapture(port);
+            camera.setResolution(width, height);
 
-            CvSink cvSink = CameraServer.getInstance().getVideo();
-            CvSource outputStream = CameraServer.getInstance().putVideo(label, width, height);
+            CvSink cvSink = server.getVideo();
+            CvSource outputStream = server.putVideo(label, width, height);
 
             Mat source = new Mat();
             Mat output = new Mat();
@@ -54,9 +53,9 @@ public class Vision extends Subsystem {
             while (!Thread.interrupted()) {
                 cvSink.grabFrame(source);
                 if (!source.empty()) {
-                    if (camera == GAFFER) {
+                    if (processor == GAFFER) {
                         processGaffer(source, output);
-                    } else if (camera == RETROREFLECTIVE) {
+                    } else if (processor == RETROREFLECTIVE) {
                         processRetroreflective(source, output);
                     }
                     outputStream.putFrame(output);
@@ -65,10 +64,9 @@ public class Vision extends Subsystem {
         }).start();
     }
 
-    private double threshold = 127;
-    private int elementType = Imgproc.CV_SHAPE_ELLIPSE;
-    private int kernelSize = 2;
-    private Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
+    private static final double threshold = 127;
+    private static final double gafferWidthTarget = 50;
+    private static final double gafferWidthTolerance = 20;
     
     private void processGaffer(Mat source, Mat output) {
         Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
@@ -83,58 +81,47 @@ public class Vision extends Subsystem {
             }).get();
 
             Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
-
             if (!debug) source.copyTo(output);
 
-            Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
-
             Point[] ends = findEnds(rect);
-
-            Imgproc.circle(output, new Point(rect.center.x, rect.center.y), 5, new Scalar(0, 255, 0));
 
             boolean bothEndsVisible = endVisible(ends[0], output) && endVisible(ends[1], output);
 
             gafferOffsetX = rect.center.x - (output.width() / 2);
             
             sortPairByHeight(ends);
-            gafferAngle = angleBetweenPoints(ends[0], ends[1]);
-            gafferAngle += 90;
+            gafferAngle = angleBetweenPoints(ends[0], ends[1]) + 90;
             
-            if (bothEndsVisible) {
-                gafferAvailable = false;
-                gafferEndVisible = false;
-                gafferOffsetX = 0;
-                gafferAngle = 0;
-            } else {
-                gafferAvailable = true;
-            }
+            gafferAvailable = (!bothEndsVisible && Math.abs(rect.size.width - gafferWidthTarget) < gafferWidthTolerance);
 
-            // SmartDashboard.putBoolean("available", available);
-            // SmartDashboard.putNumber("end.x", end.x);
-            // SmartDashboard.putNumber("end.y", end.y);
-            // SmartDashboard.putNumber("output.width()", output.width());
-            // SmartDashboard.putNumber("output.height()", output.height());
-            // SmartDashboard.putBoolean("endVisible", endVisible);
-            // SmartDashboard.putNumber("offset.x", offset.x);
-            // SmartDashboard.putNumber("offset.y", offset.y);
-            // SmartDashboard.putNumber("angle", angle);
+            if (gafferAvailable) {
+                Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
+                Imgproc.circle(output, new Point(rect.center.x, rect.center.y), 5, new Scalar(0, 255, 0));
+            }
+        } else {
+            gafferAvailable = false;
+        }
+
+        if (!gafferAvailable) {
+            gafferOffsetX = 0;
+            gafferAngle = 0;
         }
     }
 
     private static final double targetH = 71;
     private static final double rangeH = 20;
     private static final double minS = 128;
-    private static final double minV = 128;
+    private static final double targetV = 128;
+    private static final double rangeV = 20;
     // private static final double anglesMirroredTolerance = 20;
     private static final double similarWidthsTolerance = 40;
     private static final double similarHeightsTolerance = 30;
 
     private void processRetroreflective(Mat source, Mat output) {
-        //remove colours that arent green
         Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2HSV);
         Core.inRange(output,
-                     new Scalar(targetH - rangeH / 2, minS, minV), 
-                     new Scalar(targetH + rangeH / 2, 255, 255),
+                     new Scalar(targetH - rangeH / 2, minS, targetV - rangeV / 2), 
+                     new Scalar(targetH + rangeH / 2, 255,  targetV + rangeV / 2),
                      output);
         
         List<RotatedRect> rects = findRects(output, output);
@@ -143,9 +130,9 @@ public class Vision extends Subsystem {
         List<RotatedRect[]> pairs = new ArrayList<RotatedRect[]>();
 
         Imgproc.cvtColor(output, output, Imgproc.COLOR_GRAY2BGR);
+        if (!debug) source.copyTo(output);
 
         for (RotatedRect rect : rects) {
-            Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
             double angle = retroreflectiveAngle(rect);
             if (rect.size.width > rect.size.height) {
                 double height = rect.size.height;
@@ -161,8 +148,8 @@ public class Vision extends Subsystem {
 
         for (RotatedRect left : leftRects) {
             for (RotatedRect right : rightRects) {
-                double leftAngle = retroreflectiveAngle(left);
-                double rightAngle = retroreflectiveAngle(right);
+                // double leftAngle = retroreflectiveAngle(left);
+                // double rightAngle = retroreflectiveAngle(right);
                 // boolean anglesMirrored = (Math.abs((90 - leftAngle) - (rightAngle - 90)) < anglesMirroredTolerance);
                 boolean similarWidths = (Math.abs(left.size.width - right.size.width) < similarWidthsTolerance);
                 boolean similarHeights = (Math.abs(left.size.height - right.size.height) < similarHeightsTolerance);
@@ -179,20 +166,28 @@ public class Vision extends Subsystem {
             return difference.intValue();
         });
 
-        if (max.isPresent()) {
+        retroreflectiveAvailable = max.isPresent();
+        if (retroreflectiveAvailable) {
             RotatedRect[] pair = max.get();
-            retroreflectiveAvailable = true;
-            retroreflectiveOffsetX =  ((pair[0].center.x + pair[1].center.x) / 2)
+            retroreflectiveOffsetX   = ((pair[0].center.x + pair[1].center.x) / 2)
                                      - (output.width() / 2);
+            Imgproc.ellipse(output, pair[0], new Scalar(0, 0, 255));
+            Imgproc.ellipse(output, pair[1], new Scalar(0, 0, 255));
             Imgproc.circle(output, new Point((pair[0].center.x + pair[1].center.x) / 2, (pair[0].center.y + pair[1].center.y) / 2), 5, new Scalar(0, 255, 0));
         } else {
-            retroreflectiveAvailable = false;
             retroreflectiveOffsetX = 0;
         }
+
 
         SmartDashboard.putBoolean("available", retroreflectiveAvailable);
         SmartDashboard.putNumber("offsetX", retroreflectiveOffsetX);
     }
+
+    private int elementType = Imgproc.CV_SHAPE_ELLIPSE;
+    private int kernelSize = 2;
+    private Mat element = Imgproc.getStructuringElement(elementType,
+                                                        new Size(2 * kernelSize + 1, 2 * kernelSize + 1),
+                                                        new Point(kernelSize, kernelSize));
 
     private List<RotatedRect> findRects(Mat source, Mat output) {
         Imgproc.erode(output, output, element);
@@ -200,8 +195,10 @@ public class Vision extends Subsystem {
 
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(output, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        
-        return contours.stream().map(contour -> Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()))).collect(Collectors.toList());
+
+        return contours.stream().map(
+            contour -> Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()))
+        ).collect(Collectors.toList());
     }
 
     private Point[] findEnds(RotatedRect rect) {
