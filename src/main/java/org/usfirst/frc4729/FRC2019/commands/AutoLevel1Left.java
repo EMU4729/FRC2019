@@ -31,7 +31,7 @@ public class AutoLevel1Left extends CommandGroup {
         // a CommandGroup containing them would require both the chassis and the
         // arm.
 
-        addParallel(new SetWinchLevel(0));
-        addSequential(new FollowGaffer());
+        // addParallel(new SetWinchLevel(0));
+        // addSequential(new FollowGaffer());
     }
 }

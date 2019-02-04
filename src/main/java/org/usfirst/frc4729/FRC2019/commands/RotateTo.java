@@ -11,10 +11,14 @@ import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc4729.FRC2019.Robot;
 import org.usfirst.frc4729.FRC2019.Util;
 
-public class FollowRetroreflective extends Command {
-    public FollowRetroreflective() {
+public class RotateTo extends Command {
+    double targetAngle;
+
+    public RotateTo(double angle) {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
+
+        targetAngle = angle;
     }
 
     // Called just before this Command runs the first time
@@ -30,11 +34,12 @@ public class FollowRetroreflective extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.drive.omni(1,
-                         0,
-                         Util.linear(Robot.vision.gafferAngle, 0, minPower, maxPower, slowRange, stopRange)
-                        );
+        // Robot.drive.omni(0,
+        //                  0,
+        //                  Util.linear(Robot., 0, minPower, maxPower, slowRange, stopRange)
+        //                 );
     }
+
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {

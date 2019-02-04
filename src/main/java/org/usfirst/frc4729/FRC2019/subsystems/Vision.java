@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.Optional;
 
 public class Vision extends Subsystem {
-    private boolean debug = true;
+    private boolean debug = false;
 
     public boolean gafferAvailable = false;
     public double gafferOffsetX = 0;
@@ -27,36 +27,42 @@ public class Vision extends Subsystem {
 
     private static final int GAFFER = 1;
     private static final int RETROREFLECTIVE = 2;
-
     private static final int gafferCameraWidth = 160;
     private static final int gafferCameraHeight = 120;
     private static final int retroreflectiveCameraWidth = 160;
     private static final int retroreflectiveCameraHeight = 120;
 
-    public void startCamera() {
-        // setupCamera(GAFFER, 0, "Gaffer", gafferCameraWidth, gafferCameraHeight);
-        setupCamera(RETROREFLECTIVE, 0, "Retroreflective", retroreflectiveCameraWidth, retroreflectiveCameraHeight);
-    }
-
-    private void setupCamera(int processor, int port, String label, int width, int height) {
+    public void startCameras() {
         new Thread(() -> {
-            CameraServer server = CameraServer.getInstance();
-            UsbCamera camera = server.startAutomaticCapture(port);
-            camera.setResolution(width, height);
+            CameraServer instance = CameraServer.getInstance();
+            VideoSink server = instance.getServer();
+            UsbCamera camera0 = instance.startAutomaticCapture(0);
+            UsbCamera camera1 = instance.startAutomaticCapture(0);
+            camera0.setResolution(gafferCameraWidth, gafferCameraHeight);
+            camera1.setResolution(retroreflectiveCameraWidth, retroreflectiveCameraHeight);
 
-            CvSink cvSink = server.getVideo();
-            CvSource outputStream = server.putVideo(label, width, height);
+            CvSink cvSink = instance.getVideo();
+            CvSource outputStream = instance.putVideo(label, width, height);
 
             Mat source = new Mat();
             Mat output = new Mat();
 
+            int processor = GAFFER;
+
             while (!Thread.interrupted()) {
                 cvSink.grabFrame(source);
                 if (!source.empty()) {
-                    if (processor == GAFFER) {
+                    switch (processor) {
+                    case GAFFER:
+                        server.setSource(camera0);
                         processGaffer(source, output);
-                    } else if (processor == RETROREFLECTIVE) {
+                        processor = RETROREFLECTIVE;
+                        break;
+                    case RETROREFLECTIVE:
+                        server.setSource(camera1);
                         processRetroreflective(source, output);
+                        processor = GAFFER;
+                        break;
                     }
                     outputStream.putFrame(output);
                 }
