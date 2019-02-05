@@ -14,9 +14,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.Optional;
+import edu.wpi.cscore.VideoSource.ConnectionStrategy;
 
 public class Vision extends Subsystem {
-    private boolean debug = false;
+    private boolean debug = true;
 
     public boolean gafferAvailable = false;
     public double gafferOffsetX = 0;
@@ -25,46 +26,56 @@ public class Vision extends Subsystem {
     public boolean retroreflectiveAvailable = false;            
     public double retroreflectiveOffsetX = 0;
 
+    private static final int CAMERAS = 2;
+
     private static final int GAFFER = 1;
-    private static final int RETROREFLECTIVE = 2;
-    private static final int gafferCameraWidth = 160;
-    private static final int gafferCameraHeight = 120;
-    private static final int retroreflectiveCameraWidth = 160;
-    private static final int retroreflectiveCameraHeight = 120;
+    private static final int RETROREFLECTIVE = 0;
+    
+    private static final Size[] sizes = new Size[CAMERAS];
+    private static final String[] labels = new String[CAMERAS];
+
+    public Vision() {
+        sizes[GAFFER] = new Size(160, 120);
+        sizes[RETROREFLECTIVE] = new Size(160, 120);
+        labels[GAFFER] = "Gaffer";
+        labels[RETROREFLECTIVE] = "Retroreflective";
+    }    
 
     public void startCameras() {
+        CameraServer instance = CameraServer.getInstance();
+        UsbCamera[] cameras = new UsbCamera[CAMERAS];
+        CvSource[] outputStreams = new CvSource[CAMERAS];
+        CvSink[] sinks = new CvSink[CAMERAS];
+
+        for (int i = 0; i < CAMERAS; i++) {
+            cameras[i] = instance.startAutomaticCapture(i);
+            cameras[i].setResolution((int) sizes[i].width, (int) sizes[i].height);
+            cameras[i].setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+            outputStreams[i] = instance.putVideo(labels[i], (int) sizes[i].width, (int) sizes[i].height);
+            sinks[i] = instance.getVideo("USB Camera " + i);
+            setupCamera(i, outputStreams, sinks);
+        }
+    }
+
+    private void setupCamera(int camera, CvSource[] outputStreams, CvSink[] sinks) {
         new Thread(() -> {
-            CameraServer instance = CameraServer.getInstance();
-            VideoSink server = instance.getServer();
-            UsbCamera camera0 = instance.startAutomaticCapture(0);
-            UsbCamera camera1 = instance.startAutomaticCapture(0);
-            camera0.setResolution(gafferCameraWidth, gafferCameraHeight);
-            camera1.setResolution(retroreflectiveCameraWidth, retroreflectiveCameraHeight);
-
-            CvSink cvSink = instance.getVideo();
-            CvSource outputStream = instance.putVideo(label, width, height);
-
             Mat source = new Mat();
             Mat output = new Mat();
 
-            int processor = GAFFER;
-
             while (!Thread.interrupted()) {
-                cvSink.grabFrame(source);
+                sinks[camera].grabFrame(source);
+
                 if (!source.empty()) {
-                    switch (processor) {
+                    switch (camera) {
                     case GAFFER:
-                        server.setSource(camera0);
                         processGaffer(source, output);
-                        processor = RETROREFLECTIVE;
                         break;
                     case RETROREFLECTIVE:
-                        server.setSource(camera1);
                         processRetroreflective(source, output);
-                        processor = GAFFER;
                         break;
                     }
-                    outputStream.putFrame(output);
+
+                    outputStreams[camera].putFrame(output);
                 }
             }
         }).start();
@@ -114,11 +125,11 @@ public class Vision extends Subsystem {
         }
     }
 
-    private static final double targetH = 71;
-    private static final double rangeH = 20;
+    private static final double targetH = 92;
+    private static final double rangeH = 80;
     private static final double minS = 128;
     private static final double targetV = 128;
-    private static final double rangeV = 20;
+    private static final double rangeV = 255;
     // private static final double anglesMirroredTolerance = 20;
     private static final double similarWidthsTolerance = 40;
     private static final double similarHeightsTolerance = 30;
@@ -177,13 +188,14 @@ public class Vision extends Subsystem {
             RotatedRect[] pair = max.get();
             retroreflectiveOffsetX   = ((pair[0].center.x + pair[1].center.x) / 2)
                                      - (output.width() / 2);
+            pair[0].angle += 90;
+            pair[1].angle += 90;
             Imgproc.ellipse(output, pair[0], new Scalar(0, 0, 255));
             Imgproc.ellipse(output, pair[1], new Scalar(0, 0, 255));
             Imgproc.circle(output, new Point((pair[0].center.x + pair[1].center.x) / 2, (pair[0].center.y + pair[1].center.y) / 2), 5, new Scalar(0, 255, 0));
         } else {
             retroreflectiveOffsetX = 0;
         }
-
 
         SmartDashboard.putBoolean("available", retroreflectiveAvailable);
         SmartDashboard.putNumber("offsetX", retroreflectiveOffsetX);
