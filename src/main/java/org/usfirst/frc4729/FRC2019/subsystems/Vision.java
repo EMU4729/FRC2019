@@ -20,6 +20,7 @@ public class Vision extends Subsystem {
     private boolean debug = true;
 
     public boolean gafferAvailable = false;
+    public boolean gafferEndVisible = false;
     public double gafferOffsetX = 0;
     public double gafferAngle = 0;
 
@@ -36,7 +37,9 @@ public class Vision extends Subsystem {
 
     public Vision() {
         sizes[GAFFER] = new Size(160, 120);
-        sizes[RETROREFLECTIVE] = new Size(160, 120);
+        // sizes[RETROREFLECTIVE] = new Size(640, 480);
+        sizes[RETROREFLECTIVE] = new Size(320, 240);
+        // sizes[RETROREFLECTIVE] = new Size(160, 120);
         labels[GAFFER] = "Gaffer";
         labels[RETROREFLECTIVE] = "Retroreflective";
     }    
@@ -55,6 +58,8 @@ public class Vision extends Subsystem {
             sinks[i] = instance.getVideo("USB Camera " + i);
             setupCamera(i, outputStreams, sinks);
         }
+        
+        cameras[RETROREFLECTIVE].setExposureManual(20);
     }
 
     private void setupCamera(int camera, CvSource[] outputStreams, CvSink[] sinks) {
@@ -89,7 +94,7 @@ public class Vision extends Subsystem {
         Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
         Imgproc.threshold(output, output, threshold, 255, Imgproc.THRESH_BINARY);
 
-        List<RotatedRect> rects = findRects(source, output);
+        List<RotatedRect> rects = findRects(source, output, true);
 
         if (rects.size() > 0) {
             RotatedRect rect = rects.stream().max((a, b) -> {
@@ -102,7 +107,11 @@ public class Vision extends Subsystem {
 
             Point[] ends = findEnds(rect);
 
-            boolean bothEndsVisible = endVisible(ends[0], output) && endVisible(ends[1], output);
+            boolean endVisible0 = endVisible(ends[0], output);
+            boolean endVisible1 = endVisible(ends[1], output);
+
+            boolean bothEndsVisible = endVisible0 && endVisible1;
+            gafferEndVisible = endVisible0 || endVisible1;
 
             gafferOffsetX = rect.center.x - (output.width() / 2);
             
@@ -125,23 +134,29 @@ public class Vision extends Subsystem {
         }
     }
 
-    private static final double targetH = 92;
-    private static final double rangeH = 80;
-    private static final double minS = 128;
-    private static final double targetV = 128;
-    private static final double rangeV = 255;
+    private static double targetH = 78;
+    private static double rangeH = 40;
+    private static double minS = 128;
+    private static double targetV = 255;
+    private static double rangeV = 80;
     // private static final double anglesMirroredTolerance = 20;
-    private static final double similarWidthsTolerance = 40;
-    private static final double similarHeightsTolerance = 30;
+    private static double similarWidthsTolerance = 40;
+    private static double similarHeightsTolerance = 30;
 
     private void processRetroreflective(Mat source, Mat output) {
+        targetH = SmartDashboard.getNumber("target hue", targetH);
+        rangeH = SmartDashboard.getNumber("range hue", rangeH);
+        minS = SmartDashboard.getNumber("min saturation", minS);
+        targetV = SmartDashboard.getNumber("target value", targetV);
+        rangeV = SmartDashboard.getNumber("range value", rangeV);
+
         Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2HSV);
         Core.inRange(output,
                      new Scalar(targetH - rangeH / 2, minS, targetV - rangeV / 2), 
                      new Scalar(targetH + rangeH / 2, 255,  targetV + rangeV / 2),
                      output);
         
-        List<RotatedRect> rects = findRects(output, output);
+        List<RotatedRect> rects = findRects(output, output, false);
         List<RotatedRect> leftRects = new ArrayList<RotatedRect>();
         List<RotatedRect> rightRects = new ArrayList<RotatedRect>();
         List<RotatedRect[]> pairs = new ArrayList<RotatedRect[]>();
@@ -156,9 +171,11 @@ public class Vision extends Subsystem {
                 rect.size.height = rect.size.width;
                 rect.size.width = height;
             }
-            if (angle < 90) {
+            if (angle > 0 && angle < 90) {
+                SmartDashboard.putNumber("left rect", angle);
                 leftRects.add(rect);
-            } else {
+            } else if (angle >= 90 && angle < 180) {
+                SmartDashboard.putNumber("right rect", angle);
                 rightRects.add(rect);
             }
         }
@@ -168,9 +185,10 @@ public class Vision extends Subsystem {
                 // double leftAngle = retroreflectiveAngle(left);
                 // double rightAngle = retroreflectiveAngle(right);
                 // boolean anglesMirrored = (Math.abs((90 - leftAngle) - (rightAngle - 90)) < anglesMirroredTolerance);
+                boolean properlyAdjacent = (left.center.x < right.center.x);
                 boolean similarWidths = (Math.abs(left.size.width - right.size.width) < similarWidthsTolerance);
                 boolean similarHeights = (Math.abs(left.size.height - right.size.height) < similarHeightsTolerance);
-                if (/*anglesMirrored && */similarWidths && similarHeights) {
+                if (/*anglesMirrored && */properlyAdjacent && similarWidths && similarHeights) {
                     RotatedRect[] pair = {left, right};
                     pairs.add(pair);
                 }
@@ -207,9 +225,11 @@ public class Vision extends Subsystem {
                                                         new Size(2 * kernelSize + 1, 2 * kernelSize + 1),
                                                         new Point(kernelSize, kernelSize));
 
-    private List<RotatedRect> findRects(Mat source, Mat output) {
-        Imgproc.erode(output, output, element);
-        Imgproc.dilate(output, output, element);
+    private List<RotatedRect> findRects(Mat source, Mat output, boolean noiseFilter) {
+        if (noiseFilter) {
+            Imgproc.erode(output, output, element);
+            Imgproc.dilate(output, output, element);
+        }
 
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(output, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);

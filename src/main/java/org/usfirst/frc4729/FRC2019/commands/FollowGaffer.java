@@ -18,33 +18,37 @@ public class FollowGaffer extends Command {
     }
 
     double offsetSlowRange = 50;
-	double offsetStopRange = 10;
+	double offsetStopRange = 0;
 	
 	double angleSlowRange = 50;
-    double angleStopRange = 10;
+    double angleStopRange = 0;
 
-    double minPower = 0.5;
-    double maxPower = 1;
+    double offsetMinPower = 0.5;
+    double offsetMaxPower = 1;
+
+    double angleMinPower = 0.5;
+    double angleMaxPower = 1;
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-            Robot.drive.omni(1,
-							 Util.linear(Robot.vision.gafferOffsetX,
-										 0,
-										 minPower,
-										 maxPower,
-										 offsetSlowRange,
-										 offsetStopRange
-										),
-							 Util.linear(Robot.vision.gafferAngle,
-										 0,
-										 minPower,
-										 maxPower,
-										 angleSlowRange,
-										 angleStopRange
-										)
-							);
+        double forwards = 0;
+        if (Robot.vision.gafferEndVisible) {
+            forwards = 1;
+        }
+        Robot.drive.omni(forwards,
+                         Util.linear(Robot.vision.gafferOffsetX,
+                                     0,
+                                     offsetMinPower,
+                                     offsetMaxPower,
+                                     offsetSlowRange,
+                                     offsetStopRange),
+                         Util.linear(Robot.vision.gafferAngle,
+                                     0,
+                                     angleMinPower,
+                                     angleMaxPower,
+                                     angleSlowRange,
+                                     angleStopRange));
     }
 
     // Make this return true when this Command no longer needs to run execute()

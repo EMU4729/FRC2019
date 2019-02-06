@@ -27,13 +27,19 @@ public class FollowRetroreflective extends Command {
     double minPower = 0;
     double maxPower = 1;
 
+    // 
+
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
         Robot.drive.omni(1,
                          0,
-                         Util.linear(Robot.vision.gafferAngle, 0, minPower, maxPower, slowRange, stopRange)
-                        );
+                         Util.linear(Robot.vision.gafferAngle,
+                                     0,
+                                     minPower,
+                                     maxPower,
+                                     slowRange,
+                                     stopRange));
     }
     // Make this return true when this Command no longer needs to run execute()
     @Override
