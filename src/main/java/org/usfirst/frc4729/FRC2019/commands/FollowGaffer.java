@@ -10,6 +10,7 @@ public class FollowGaffer extends Command {
         // eg. requires(chassis);
         requires(Robot.drive);
         requires(Robot.vision);
+        requires(Robot.distanceSensor);
     }
 
     // Called just before this Command runs the first time
@@ -19,13 +20,11 @@ public class FollowGaffer extends Command {
 
     double offsetSlowRange = 50;
 	double offsetStopRange = 0;
-	
-	double angleSlowRange = 50;
-    double angleStopRange = 0;
-
     double offsetMinPower = 0.5;
     double offsetMaxPower = 1;
 
+    double angleSlowRange = 50;
+    double angleStopRange = 0;
     double angleMinPower = 0.5;
     double angleMaxPower = 1;
 
@@ -54,7 +53,12 @@ public class FollowGaffer extends Command {
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
-        return Robot.distanceSensor.isTouchingWall();
+        if (Robot.distanceSensor.isTouchingWall()) {
+            Robot.gyro.reset();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // Called once after isFinished returns true

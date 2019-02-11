@@ -1,11 +1,7 @@
 package org.usfirst.frc4729.FRC2019.subsystems;
-import org.usfirst.frc4729.FRC2019.commands.*;
-import org.usfirst.frc4729.FRC2019.Util;
 
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import org.usfirst.frc4729.FRC2019.Util;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.PIDOutput;
-import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -13,8 +9,6 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.PWMTalonSRX;
-import edu.wpi.first.wpilibj.SpeedController;
-
 
 public class Mechanism extends Subsystem {
     int level;
@@ -28,7 +22,6 @@ public class Mechanism extends Subsystem {
     private PWMTalonSRX winch1;
     private PWMTalonSRX winch2;
     private Encoder winchEncoder;
-
 
     public Mechanism() {
         ejectPneumatics = new DoubleSolenoid[numEjectPneumatics];
