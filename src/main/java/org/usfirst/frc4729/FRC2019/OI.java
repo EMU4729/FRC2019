@@ -64,8 +64,6 @@ public class OI {
             rightButton2 = new JoystickButton(rightStick, 2);
             rightTrigger = new JoystickButton(rightStick, 1);
 
-            rightButton3.whenPressed(new Extend());
-            rightButton2.whenPressed(new Retract());
             rightTrigger.whenPressed(new Eject());
         }
     }

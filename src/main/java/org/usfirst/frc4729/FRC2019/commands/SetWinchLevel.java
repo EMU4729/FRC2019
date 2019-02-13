@@ -12,12 +12,12 @@ import edu.wpi.first.wpilibj.command.Command;
 
 public class SetWinchLevel extends Command {
     int level;
-    public SetWinchLevel(int n) {
+
+    public SetWinchLevel(int level) {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
         requires(Robot.mechanism);
-
-        level = n;
+        this.level = level;
     }
 
     // Called just before this Command runs the first time
@@ -28,7 +28,7 @@ public class SetWinchLevel extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.mechanism.setLevel(level);
+        Robot.mechanism.level = level;
     }
 
     // Make this return true when this Command no longer needs to run execute()

@@ -8,13 +8,17 @@
 package org.usfirst.frc4729.FRC2019.commands;
 
 import org.usfirst.frc4729.FRC2019.Robot;
-
 import edu.wpi.first.wpilibj.command.Command;
+import org.usfirst.frc4729.FRC2019.subsystems.Navigation.Location;
 
-public class Retract extends Command {
-    public Retract() {
+public class SetLastKnownLocation extends Command {
+    Location location;
+
+    public SetLastKnownLocation(Location location) {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
+        requires(Robot.navigation);
+        this.location = location;
     }
 
     // Called just before this Command runs the first time
@@ -25,7 +29,7 @@ public class Retract extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.mechanism.retract();
+        Robot.navigation.setLastKnownLocation(location);
     }
 
     // Make this return true when this Command no longer needs to run execute()

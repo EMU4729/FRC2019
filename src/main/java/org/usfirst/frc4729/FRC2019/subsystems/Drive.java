@@ -89,7 +89,7 @@ public class Drive extends Subsystem {
         rightBackMotor.set(ControlMode.PercentOutput ,rightBack);
     }
 
-    public void control () {
+    public void control() {
         TalonSRXPIDSetConfiguration talonconfig = new TalonSRXPIDSetConfiguration();
         talonconfig.selectedFeedbackCoefficient = 2.0;
         talonconfig.selectedFeedbackSensor = FeedbackDevice.QuadEncoder;

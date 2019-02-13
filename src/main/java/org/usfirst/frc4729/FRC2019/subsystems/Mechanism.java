@@ -11,11 +11,10 @@ import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.PWMTalonSRX;
 
 public class Mechanism extends Subsystem {
-    int level;
+    public int level;
 
-    private int numEjectPneumatics = 3;
-    private DoubleSolenoid[] ejectPneumatics;
-    private DoubleSolenoid extendPneumatic;
+    private int numPneumatics = 3;
+    private DoubleSolenoid[] pneumatics;
     private Compressor compressor;
     private DigitalInput limitTop;
     private DigitalInput limitBottom;
@@ -24,26 +23,20 @@ public class Mechanism extends Subsystem {
     private Encoder winchEncoder;
 
     public Mechanism() {
-        ejectPneumatics = new DoubleSolenoid[numEjectPneumatics];
-        for (int i = 0; i < numEjectPneumatics; i++) {
-            ejectPneumatics[i] = new DoubleSolenoid(0, 0, 1);
-            addChild("EjectPneumatic1",ejectPneumatics[i]);
+        pneumatics = new DoubleSolenoid[numPneumatics];
+        for (int i = 0; i < numPneumatics; i++) {
+            pneumatics[i] = new DoubleSolenoid(0, 0, 1);
+            addChild("EjectPneumatic1", pneumatics[i]);
         }
-        
-        extendPneumatic = new DoubleSolenoid(0, 6, 7);
-        addChild("ExtendPneumatic",extendPneumatic);
-        
         
         compressor = new Compressor(0);
         addChild("Compressor",compressor);
-        
         
         limitTop = new DigitalInput(0);
         addChild("LimitTop",limitTop);
         
         limitBottom = new DigitalInput(1);
         addChild("LimitBottom",limitBottom);
-        
         
         winch1 = new PWMTalonSRX(1);
         addChild("Winch1",winch1);
@@ -80,12 +73,13 @@ public class Mechanism extends Subsystem {
         if (limitTop.get() || limitBottom.get()) {
             move(0);
         } else {
-            move(Util.linear(winchEncoder.get(), levels[level], minPower, maxPower, slowRange, stopRange));
+            move(Util.linear(winchEncoder.get(),
+                             levels[level],
+                             minPower,
+                             maxPower,
+                             slowRange,
+                             stopRange));
         }
-    }
-
-    public void setLevel(int value) {
-        level = value;
     }
 
     public void up() {
@@ -105,25 +99,17 @@ public class Mechanism extends Subsystem {
         winch2.set(power);
     }
 
-    public void extend() {
-        extendPneumatic.set(DoubleSolenoid.Value.kForward);
-    }
-
-    public void retract() {
-        extendPneumatic.set(DoubleSolenoid.Value.kReverse);
-    }
-
     public void eject() {
-        setEjectPneumatics(DoubleSolenoid.Value.kForward);
+        setPneumatics(DoubleSolenoid.Value.kForward);
     }
 
     public void uneject() {
-        setEjectPneumatics(DoubleSolenoid.Value.kReverse);
+        setPneumatics(DoubleSolenoid.Value.kReverse);
     }
 
-    private void setEjectPneumatics(DoubleSolenoid.Value value) {
-        for (int i = 0; i < numEjectPneumatics; i++) {
-            ejectPneumatics[i].set(value);
+    private void setPneumatics(DoubleSolenoid.Value value) {
+        for (int i = 0; i < numPneumatics; i++) {
+            pneumatics[i].set(value);
         }
     }
 }

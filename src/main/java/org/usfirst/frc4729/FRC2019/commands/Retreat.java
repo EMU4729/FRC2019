@@ -7,31 +7,39 @@
 
 package org.usfirst.frc4729.FRC2019.commands;
 
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc4729.FRC2019.Robot;
 
-import edu.wpi.first.wpilibj.command.Command;
+public class Retreat extends Command {
+    private static final double RETREAT_TIME = 1000; // milliseconds
 
-public class Extend extends Command {
-    public Extend() {
+    Timer timer;
+
+    public Retreat() {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
+        requires(Robot.drive);
+        timer = new Timer();
+        timer.reset();
     }
 
     // Called just before this Command runs the first time
     @Override
     protected void initialize() {
+        timer.start();
     }
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.mechanism.extend();
+        Robot.drive.omni(-1, 0, 0);
     }
 
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
-        return true;
+        return (timer.get() >= RETREAT_TIME);
     }
 
     // Called once after isFinished returns true

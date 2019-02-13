@@ -29,8 +29,6 @@ public class FollowRetroreflective extends Command {
     double minPower = 0;
     double maxPower = 1;
 
-    // 
-
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {

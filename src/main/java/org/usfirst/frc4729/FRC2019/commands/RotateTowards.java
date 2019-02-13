@@ -10,15 +10,16 @@ package org.usfirst.frc4729.FRC2019.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc4729.FRC2019.Robot;
 import org.usfirst.frc4729.FRC2019.Util;
+import org.usfirst.frc4729.FRC2019.subsystems.Navigation.Location;
 
-public class RotateTo extends Command {
+public class RotateTowards extends Command {
     double targetAngle;
 
-    public RotateTo(double angle) {
+    public RotateTowards(Location location) {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
-
-        targetAngle = angle;
+        requires(Robot.navigation);
+        targetAngle = Robot.navigation.angleToLocation(location);
     }
 
     // Called just before this Command runs the first time
@@ -34,16 +35,22 @@ public class RotateTo extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        // Robot.drive.omni(0,
-        //                  0,
-        //                  Util.linear(Robot., 0, minPower, maxPower, slowRange, stopRange)
-        //                 );
+        Robot.drive.omni(0, 0, rotationPower());
     }
 
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
-        return Robot.vision.gafferAvailable;
+        return (rotationPower() == 0);
+    }
+
+    private double rotationPower() {
+        return Util.linear(Robot.navigation.getRobotAngle(),
+                           targetAngle,
+                           minPower,
+                           maxPower,
+                           slowRange,
+                           stopRange);
     }
 
     // Called once after isFinished returns true
