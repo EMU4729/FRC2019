@@ -8,7 +8,7 @@
 package org.usfirst.frc4729.FRC2019.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
-import org.usfirst.frc4729.FRC2019.Robot;
+import org.usfirst.frc4729.FRC2019.Util;
 import edu.wpi.first.wpilibj.AnalogGyro;
 
 /**
@@ -42,7 +42,11 @@ public class Navigation extends Subsystem {
     }
 
     public double getRobotAngle() {
-        return referenceAngle + gyro.getAngle();
+        return Util.normAngle(referenceAngle + gyro.getAngle());
+    }
+
+    public double relativeAngle(double angle) {
+        return Util.normAngle(getRobotAngle() - angle) - 180;
     }
 
     public double angleToLocation(Location location) {
@@ -59,9 +63,9 @@ public class Navigation extends Subsystem {
     }
 
     public static class Location {
-        double x = 0;
-        double y = 0;
-        double angle = 0;
+        public double x = 0;
+        public double y = 0;
+        public double angle = 0;
 
         public Location(double x, double y, double angle) {
             this.x = x;

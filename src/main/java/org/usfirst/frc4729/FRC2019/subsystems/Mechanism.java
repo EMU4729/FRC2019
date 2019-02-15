@@ -12,14 +12,14 @@ import edu.wpi.first.wpilibj.PWMTalonSRX;
 
 public class Mechanism extends Subsystem {
     public int level;
+    public boolean levelReached;
 
     private int numPneumatics = 3;
     private DoubleSolenoid[] pneumatics;
     private Compressor compressor;
     private DigitalInput limitTop;
     private DigitalInput limitBottom;
-    private PWMTalonSRX winch1;
-    private PWMTalonSRX winch2;
+    private PWMTalonSRX winch;
     private Encoder winchEncoder;
 
     public Mechanism() {
@@ -38,13 +38,9 @@ public class Mechanism extends Subsystem {
         limitBottom = new DigitalInput(1);
         addChild("LimitBottom",limitBottom);
         
-        winch1 = new PWMTalonSRX(1);
-        addChild("Winch1",winch1);
-        winch1.setInverted(false);
-        
-        winch2 = new PWMTalonSRX(3);
-        addChild("Winch2",winch2);
-        winch2.setInverted(false);
+        winch = new PWMTalonSRX(1);
+        addChild("Winch",winch);
+        winch.setInverted(false);
         
         winchEncoder = new Encoder(2, 3, false, EncodingType.k4X);
         addChild("WinchEncoder",winchEncoder);
@@ -70,16 +66,19 @@ public class Mechanism extends Subsystem {
     double maxPower = 1;
 
     public void updateWinch() {
+        double power;
         if (limitTop.get() || limitBottom.get()) {
-            move(0);
+            power = 0;
         } else {
-            move(Util.linear(winchEncoder.get(),
-                             levels[level],
-                             minPower,
-                             maxPower,
-                             slowRange,
-                             stopRange));
+            power = Util.linear(winchEncoder.get(),
+                                levels[level],
+                                minPower,
+                                maxPower,
+                                slowRange,
+                                stopRange);
         }
+        levelReached = (power == 0);
+        move(power);
     }
 
     public void up() {
@@ -95,8 +94,7 @@ public class Mechanism extends Subsystem {
     }
 
     private void move(double power) {
-        winch1.set(power);
-        winch2.set(power);
+        winch.set(power);
     }
 
     public void eject() {

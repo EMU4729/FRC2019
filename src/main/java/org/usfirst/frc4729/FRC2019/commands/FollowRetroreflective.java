@@ -10,13 +10,17 @@ package org.usfirst.frc4729.FRC2019.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc4729.FRC2019.Robot;
 import org.usfirst.frc4729.FRC2019.Util;
+import org.usfirst.frc4729.FRC2019.subsystems.Navigation.Location;
 
 public class FollowRetroreflective extends Command {
-    public FollowRetroreflective() {
+    Location location;
+
+    public FollowRetroreflective(Location location) {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
         requires(Robot.drive);
         requires(Robot.vision);
+        this.location = location;
     }
 
     // Called just before this Command runs the first time
@@ -24,7 +28,7 @@ public class FollowRetroreflective extends Command {
     protected void initialize() {
     }
 
-    double slowRange = 90;
+    double slowRange = 20;
     double stopRange = 0;
     double minPower = 0;
     double maxPower = 1;
@@ -32,15 +36,27 @@ public class FollowRetroreflective extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.drive.omni(1,
-                         0,
-                         Util.linear(Robot.vision.gafferAngle,
-                                     0,
-                                     minPower,
-                                     maxPower,
-                                     slowRange,
-                                     stopRange));
+        double forwards = 1;
+        double sideways = sidewaysFromAngle(Robot.vision.retroreflectiveRelativeAngle);
+        double turn = Util.linear(Robot.navigation.relativeAngle(location.angle),
+                                  0,
+                                  minPower,
+                                  maxPower,
+                                  slowRange,
+                                  stopRange)
+                      * (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
+
+        Robot.drive.omni(forwards, sideways, turn);
     }
+
+    private double sidewaysFromAngle(double angle) {
+        double y = Math.sin(angle);
+        double x = Math.cos(angle);
+        double sideways = (1 / y) * x;
+        if (sideways > 1) sideways = 1;
+        return sideways;
+    }
+
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {

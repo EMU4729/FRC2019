@@ -48,7 +48,7 @@ public class Auto extends CommandGroup {
 
     private void go(Location location) {
         addSequential(new RotateTowards(location));
-        addSequential(new FollowRetroreflective());
+        addSequential(new FollowRetroreflective(location));
         addSequential(new FollowGaffer());
         addSequential(new SetWinchLevel(0)); 
         addSequential(new Eject());

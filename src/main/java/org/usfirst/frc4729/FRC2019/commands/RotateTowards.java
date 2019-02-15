@@ -45,8 +45,8 @@ public class RotateTowards extends Command {
     }
 
     private double rotationPower() {
-        return Util.linear(Robot.navigation.getRobotAngle(),
-                           targetAngle,
+        return Util.linear(Robot.navigation.relativeAngle(targetAngle),
+                           0,
                            minPower,
                            maxPower,
                            slowRange,

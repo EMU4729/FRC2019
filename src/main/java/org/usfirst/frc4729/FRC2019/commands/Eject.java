@@ -8,35 +8,33 @@
 package org.usfirst.frc4729.FRC2019.commands;
 
 import org.usfirst.frc4729.FRC2019.Robot;
+import edu.wpi.first.wpilibj.command.TimedCommand;
 
-import edu.wpi.first.wpilibj.command.Command;
+public class Eject extends TimedCommand {
+    private static final double EJECT_TIME = 1000; // milliseconds
 
-public class Eject extends Command {
     public Eject() {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
+        super(EJECT_TIME);
+        requires(Robot.mechanism);
     }
 
     // Called just before this Command runs the first time
     @Override
     protected void initialize() {
+        Robot.mechanism.eject();
     }
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.mechanism.eject();
-    }
-
-    // Make this return true when this Command no longer needs to run execute()
-    @Override
-    protected boolean isFinished() {
-        return true;
     }
 
     // Called once after isFinished returns true
     @Override
     protected void end() {
+        Robot.mechanism.uneject();
     }
 
     // Called when another command which requires one or more of the same

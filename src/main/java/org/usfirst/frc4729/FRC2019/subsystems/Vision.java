@@ -2,9 +2,7 @@ package org.usfirst.frc4729.FRC2019.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import org.opencv.imgproc.Imgproc;
-
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
@@ -15,6 +13,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.Optional;
 import edu.wpi.cscore.VideoSource.ConnectionStrategy;
+import org.usfirst.frc4729.FRC2019.Util;
 
 public class Vision extends Subsystem {
     private boolean debug = true;
@@ -26,14 +25,18 @@ public class Vision extends Subsystem {
 
     public boolean retroreflectiveAvailable = false;            
     public double retroreflectiveOffsetX = 0;
+    public double retroreflectiveRelativeAngle = 0;
 
-    private static final int CAMERAS = 2;
+    public final double cameraConeHalfAngle = 61 / 2;
+
+    private static final int numCameras = 2;
 
     private static final int GAFFER = 1;
     private static final int RETROREFLECTIVE = 0;
     
-    private static final Size[] sizes = new Size[CAMERAS];
-    private static final String[] labels = new String[CAMERAS];
+    private static final Size[] sizes = new Size[numCameras];
+    private static final String[] labels = new String[numCameras];
+    
 
     public Vision() {
         sizes[GAFFER] = new Size(160, 120);
@@ -46,11 +49,11 @@ public class Vision extends Subsystem {
 
     public void startCameras() {
         CameraServer instance = CameraServer.getInstance();
-        UsbCamera[] cameras = new UsbCamera[CAMERAS];
-        CvSource[] outputStreams = new CvSource[CAMERAS];
-        CvSink[] sinks = new CvSink[CAMERAS];
+        UsbCamera[] cameras = new UsbCamera[numCameras];
+        CvSource[] outputStreams = new CvSource[numCameras];
+        CvSink[] sinks = new CvSink[numCameras];
 
-        for (int i = 0; i < CAMERAS; i++) {
+        for (int i = 0; i < numCameras; i++) {
             cameras[i] = instance.startAutomaticCapture(i);
             cameras[i].setResolution((int) sizes[i].width, (int) sizes[i].height);
             cameras[i].setConnectionStrategy(ConnectionStrategy.kKeepOpen);
@@ -116,7 +119,7 @@ public class Vision extends Subsystem {
             gafferOffsetX = rect.center.x - (output.width() / 2);
             
             sortPairByHeight(ends);
-            gafferAngle = angleBetweenPoints(ends[0], ends[1]) + 90;
+            gafferAngle = Util.normAngle(angleBetweenPoints(ends[0], ends[1]) + 90);
             
             gafferAvailable = (!bothEndsVisible && Math.abs(rect.size.width - gafferWidthTarget) < gafferWidthTolerance);
 
@@ -204,8 +207,9 @@ public class Vision extends Subsystem {
         retroreflectiveAvailable = max.isPresent();
         if (retroreflectiveAvailable) {
             RotatedRect[] pair = max.get();
-            retroreflectiveOffsetX   = ((pair[0].center.x + pair[1].center.x) / 2)
+            retroreflectiveOffsetX =   ((pair[0].center.x + pair[1].center.x) / 2)
                                      - (output.width() / 2);
+            retroreflectiveRelativeAngle = (retroreflectiveOffsetX / (output.width() / 2)) * cameraConeHalfAngle;
             pair[0].angle += 90;
             pair[1].angle += 90;
             Imgproc.ellipse(output, pair[0], new Scalar(0, 0, 255));
@@ -213,6 +217,7 @@ public class Vision extends Subsystem {
             Imgproc.circle(output, new Point((pair[0].center.x + pair[1].center.x) / 2, (pair[0].center.y + pair[1].center.y) / 2), 5, new Scalar(0, 255, 0));
         } else {
             retroreflectiveOffsetX = 0;
+            retroreflectiveRelativeAngle = 0;
         }
 
         SmartDashboard.putBoolean("available", retroreflectiveAvailable);

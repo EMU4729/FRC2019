@@ -13,4 +13,8 @@ public class Util {
             return direction * maxPower;
         }
     }
+
+    public static double normAngle(double angle) {
+        return angle % 360;
+    }
 }
