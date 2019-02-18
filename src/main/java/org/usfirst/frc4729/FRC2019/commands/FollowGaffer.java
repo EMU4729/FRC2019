@@ -1,6 +1,8 @@
 package org.usfirst.frc4729.FRC2019.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import org.usfirst.frc4729.FRC2019.Robot;
 import org.usfirst.frc4729.FRC2019.Util;
 
@@ -20,12 +22,12 @@ public class FollowGaffer extends Command {
 
     double offsetSlowRange = 50;
 	double offsetStopRange = 0;
-    double offsetMinPower = 0.5;
+    double offsetMinPower = 0;
     double offsetMaxPower = 1;
 
     double angleSlowRange = 50;
     double angleStopRange = 0;
-    double angleMinPower = 0.5;
+    double angleMinPower = 0;
     double angleMaxPower = 1;
 
     // Called repeatedly when this Command is scheduled to run
@@ -35,19 +37,27 @@ public class FollowGaffer extends Command {
         if (Robot.vision.gafferEndVisible) {
             forwards = 1;
         }
-        Robot.drive.omni(forwards,
-                         Util.linear(Robot.vision.gafferOffsetX,
-                                     0,
-                                     offsetMinPower,
-                                     offsetMaxPower,
-                                     offsetSlowRange,
-                                     offsetStopRange),
-                         Util.linear(Robot.vision.gafferAngle,
-                                     0,
-                                     angleMinPower,
-                                     angleMaxPower,
-                                     angleSlowRange,
-                                     angleStopRange));
+        
+        double sideways = Util.linear(Robot.vision.gafferOffsetX,
+                                      0,
+                                      offsetMinPower,
+                                      offsetMaxPower,
+                                      offsetSlowRange,
+                                      offsetStopRange);
+
+        double turn = Util.linear(Robot.vision.gafferAngle,
+                                  0,
+                                  angleMinPower,
+                                  angleMaxPower,
+                                  angleSlowRange,
+                                  angleStopRange);
+
+        SmartDashboard.putNumber("forwards", forwards);
+        SmartDashboard.putNumber("sideways", sideways);
+        SmartDashboard.putNumber("turn", turn);
+        SmartDashboard.putBoolean("gafferEndVisible", Robot.vision.gafferEndVisible);
+
+        Robot.drive.omni(forwards, sideways, turn);
     }
 
     // Make this return true when this Command no longer needs to run execute()
@@ -59,12 +69,13 @@ public class FollowGaffer extends Command {
     // Called once after isFinished returns true
     @Override
     protected void end() {
-        // Robot.drive.omni(0, 0, 0);
+        Robot.drive.omni(0, 0, 0);
     }
 
     // Called when another command which requires one or more of the same
     // subsystems is scheduled to run
     @Override
     protected void interrupted() {
+        end();
     }
 }

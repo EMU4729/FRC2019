@@ -7,34 +7,42 @@
 
 package org.usfirst.frc4729.FRC2019.commands;
 
-import edu.wpi.first.wpilibj.command.TimedCommand;
 import org.usfirst.frc4729.FRC2019.Robot;
 
-public class Retreat extends TimedCommand {
-    private static final double RETREAT_TIME = 1000; // milliseconds
+import edu.wpi.first.wpilibj.command.Command;
 
-    public Retreat() {
+public class CalibrateWinch extends Command {
+    public CalibrateWinch() {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
-        super(RETREAT_TIME);
-        requires(Robot.drive);
+        requires(Robot.mechanism);
     }
 
     // Called just before this Command runs the first time
     @Override
     protected void initialize() {
+        Robot.mechanism.winchCalibrating = true;
     }
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.drive.omni(-1, 0, 0);
+        Robot.mechanism.move(-1);
+    }
+
+    // Make this return true when this Command no longer needs to run execute()
+    @Override
+    protected boolean isFinished() {
+        return Robot.mechanism.isAtLimitBottom();
     }
 
     // Called once after isFinished returns true
     @Override
     protected void end() {
-        Robot.drive.omni(0, 0, 0);
+        Robot.mechanism.move(0);
+        Robot.mechanism.resetWinchEncoder();
+        Robot.mechanism.winchCalibrating = false;
+        Robot.mechanism.winchCalibrated = true;
     }
 
     // Called when another command which requires one or more of the same

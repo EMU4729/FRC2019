@@ -7,26 +7,10 @@
 
 package org.usfirst.frc4729.FRC2019.commands;
 
-import edu.wpi.first.wpilibj.command.InstantCommand;
-import org.usfirst.frc4729.FRC2019.Robot;
+import edu.wpi.first.wpilibj.command.CommandGroup;
 
-/**
- * Add your docs here.
- */
-public class CancelTeleopAutomagic extends InstantCommand {
-    /**
-     * Add your docs here.
-     */
-    public CancelTeleopAutomagic() {
-        super();
-        // Use requires() here to declare subsystem dependencies
-        // eg. requires(chassis);
-        requires(Robot.drive);
-        requires(Robot.mechanism);
-    }
-
-    // Called once when the command executes
-    @Override
-    protected void initialize() {
+public class Test extends CommandGroup {
+    public Test() {
+        addSequential(new FollowGaffer());
     }
 }

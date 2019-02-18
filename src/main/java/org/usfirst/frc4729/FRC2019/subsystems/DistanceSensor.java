@@ -22,12 +22,13 @@ public class DistanceSensor extends Subsystem {
     public static final double touchingWallDistance = 20;
 
     public DistanceSensor() {
-        ultrasonic = new Ultrasonic(0, 1);
+        ultrasonic = new Ultrasonic(10, 11);
         ultrasonic.setAutomaticMode(true);
     }
 
     public double getDistance() {
-        return ultrasonic.getRangeMM();
+        // return ultrasonic.getRangeMM();
+        return 100; // idk lol
     }
 
     public boolean isTouchingWall() {

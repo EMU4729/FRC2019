@@ -110,18 +110,24 @@ public class Vision extends Subsystem {
 
             Point[] ends = findEnds(rect);
 
+            Imgproc.circle(output, new Point(ends[0].x, ends[0].y), 5, new Scalar(255, 0, 0));
+            Imgproc.circle(output, new Point(ends[1].x, ends[1].y), 5, new Scalar(255, 0, 0));
+
             boolean endVisible0 = endVisible(ends[0], output);
             boolean endVisible1 = endVisible(ends[1], output);
 
-            boolean bothEndsVisible = endVisible0 && endVisible1;
-            gafferEndVisible = endVisible0 || endVisible1;
+            SmartDashboard.putBoolean("endVisible0", endVisible0);
+            SmartDashboard.putBoolean("endVisible1", endVisible1);
+
+            boolean bothEndsVisible = (endVisible0 && endVisible1);
+            gafferEndVisible = (endVisible0 || endVisible1);
 
             gafferOffsetX = rect.center.x - (output.width() / 2);
             
             sortPairByHeight(ends);
             gafferAngle = Util.normAngle(angleBetweenPoints(ends[0], ends[1]) + 90);
             
-            gafferAvailable = (!bothEndsVisible && Math.abs(rect.size.width - gafferWidthTarget) < gafferWidthTolerance);
+            gafferAvailable = true;//(!bothEndsVisible);// && Math.abs(rect.size.width - gafferWidthTarget) < gafferWidthTolerance); // TODO
 
             if (gafferAvailable) {
                 Imgproc.ellipse(output, rect, new Scalar(0, 0, 255));
@@ -219,9 +225,6 @@ public class Vision extends Subsystem {
             retroreflectiveOffsetX = 0;
             retroreflectiveRelativeAngle = 0;
         }
-
-        SmartDashboard.putBoolean("available", retroreflectiveAvailable);
-        SmartDashboard.putNumber("offsetX", retroreflectiveOffsetX);
     }
 
     private int elementType = Imgproc.CV_SHAPE_ELLIPSE;
@@ -247,20 +250,30 @@ public class Vision extends Subsystem {
     private Point[] findEnds(RotatedRect rect) {
         Point[] ends = new Point[2];
         double length = rect.size.width;
+        double angle = rect.angle;
         if (rect.size.height > rect.size.width) {
             length = rect.size.height;
-            rect.angle += 90;
+            angle += 90;
         }
-        ends[0] = pointAddVector(rect.center.x, rect.center.y, rect.angle, length / 2);
-        ends[1] = pointAddVector(rect.center.x, rect.center.y, rect.angle + 180, length / 2);
+        ends[0] = pointAddVector(rect.center.x, rect.center.y, angle, length / 2);
+        ends[1] = pointAddVector(rect.center.x, rect.center.y, angle + 180, length / 2);
         return ends;
     }
 
     private boolean endVisible(Point end, Mat output) {
-        return (end.x > 1 &&
-                end.x < output.width() - 1 &&
-                end.y > 1 &&
-                end.y < output.height() - 1);
+        System.out.println(end.x);
+        System.out.println(end.y);
+        System.out.println(output.width());
+        System.out.println(output.height());
+        System.out.println((end.x > 2));
+        System.out.println((end.x < output.width() - 2));
+        System.out.println((end.y > 2));
+        System.out.println((end.y < output.height() - 2));
+        System.out.println("=====");
+        return (end.x > 2 &&
+                end.x < output.width() - 2 &&
+                end.y > 2 &&
+                end.y < output.height() - 2);
     }
 
     private void sortPairByHeight(Point[] ends) {
