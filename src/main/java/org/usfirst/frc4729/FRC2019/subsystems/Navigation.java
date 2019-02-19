@@ -33,16 +33,16 @@ public class Navigation extends Subsystem {
     public static final Location LOADING_STATION_LEFT = new Location(660, 0, 270);
     public static final Location LOADING_STATION_RIGHT = new Location(7532, 0, 270);
 
-    public AnalogGyro gyro;
+    // public AnalogGyro gyro; // TODO
     public Location lastKnownLocation = null;
     public double referenceAngle = 0;
 
     public Navigation() {
-        gyro = new AnalogGyro(1);
+        // gyro = new AnalogGyro(1);
     }
 
     public double getRobotAngle() {
-        return Util.normAngle(referenceAngle + gyro.getAngle());
+        return 0;//Util.normAngle(referenceAngle + gyro.getAngle());
     }
 
     public double relativeAngle(double angle) {
@@ -55,7 +55,7 @@ public class Navigation extends Subsystem {
 
     public void setLastKnownLocation(Location location) {
         lastKnownLocation = location;
-        gyro.reset();
+        // gyro.reset();
     }
 
     public static double angleBetweenLocations(Location from, Location to) {

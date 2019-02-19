@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.usfirst.frc4729.FRC2019.commands.*;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSource;
@@ -25,23 +26,23 @@ public class Drive extends Subsystem {
     // public double rampate = 6; //volts/second
     // public int profile = 0; //0 or 1
 
-    // private TalonSRX leftFrontMotor;
-    // private TalonSRX rightFrontMotor;
-    // private TalonSRX leftBackMotor;
-    // private TalonSRX rightBackMotor;
+    private TalonSRX leftFrontMotor;
+    private TalonSRX rightFrontMotor;
+    private TalonSRX leftBackMotor;
+    private TalonSRX rightBackMotor;
 
     public Drive() {
-        // leftFrontMotor = new TalonSRX(0);
-        // leftFrontMotor.setInverted(false);
+        leftFrontMotor = new TalonSRX(6);
+        leftFrontMotor.setInverted(false);
         
-        // rightFrontMotor = new TalonSRX(2);
-        // rightFrontMotor.setInverted(false);
+        rightFrontMotor = new TalonSRX(11);
+        rightFrontMotor.setInverted(false);
         
-        // leftBackMotor = new TalonSRX(4);
-        // leftBackMotor.setInverted(false);
+        leftBackMotor = new TalonSRX(5);
+        leftBackMotor.setInverted(false);
         
-        // rightBackMotor = new TalonSRX(5);
-        // rightBackMotor.setInverted(false);
+        rightBackMotor = new TalonSRX(12);
+        rightBackMotor.setInverted(false);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class Drive extends Subsystem {
         // Set the default command for a subsystem here.
         // setDefaultCommand(new MySpecialCommand());
     }
-
+    
     @Override
     public void periodic() {
         // Put code here to be run every loop
@@ -57,6 +58,11 @@ public class Drive extends Subsystem {
     }
     
     public void omni(double forwards, double sideways, double turn) {
+        // SmartDashboard.putNumber("forwards", forwards);
+        // SmartDashboard.putNumber("sideways", sideways);
+        // SmartDashboard.putNumber("turn", turn);
+        forwards = -forwards;
+
         List<Double> power = Arrays.asList(forwards + sideways + turn,  // leftFront
                                            forwards - sideways + turn,  // leftBack
                                           -forwards + sideways + turn,  // rightFront
@@ -78,16 +84,16 @@ public class Drive extends Subsystem {
     }
 
     public void setMotors(double leftFront, double leftBack, double rightFront, double rightBack) {
-        // leftFrontMotor.set(ControlMode.PercentOutput, leftFront);
-        // leftBackMotor.set(ControlMode.PercentOutput, leftBack);
-        // rightFrontMotor.set(ControlMode.PercentOutput, rightFront);
-        // rightBackMotor.set(ControlMode.PercentOutput, rightBack);
+        leftFrontMotor.set(ControlMode.PercentOutput, leftFront);
+        leftBackMotor.set(ControlMode.PercentOutput, leftBack);
+        rightFrontMotor.set(ControlMode.PercentOutput, rightFront);
+        rightBackMotor.set(ControlMode.PercentOutput, rightBack);
     }
 
     public void control() {
-        TalonSRXPIDSetConfiguration config = new TalonSRXPIDSetConfiguration();
-        config.selectedFeedbackCoefficient = 2.0;
-        config.selectedFeedbackSensor = FeedbackDevice.QuadEncoder;
+        // TalonSRXPIDSetConfiguration config = new TalonSRXPIDSetConfiguration();
+        // config.selectedFeedbackCoefficient = 2.0;
+        // config.selectedFeedbackSensor = FeedbackDevice.QuadEncoder;
         // leftFrontMotor.configurePID(config);
         // leftBackMotor.configurePID(config);
         // rightFrontMotor.configurePID(config);
