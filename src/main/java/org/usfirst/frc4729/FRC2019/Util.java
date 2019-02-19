@@ -14,6 +14,10 @@ public class Util {
         }
     }
 
+    public static boolean isInRange(double value, double target, double range) {
+        return (Math.abs(value - target) < range / 2);
+    }
+
     public static double normAngle(double angle) {
         return angle % 360;
     }

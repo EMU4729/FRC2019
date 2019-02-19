@@ -7,10 +7,12 @@
 
 package org.usfirst.frc4729.FRC2019.commands;
 
+import org.usfirst.frc4729.FRC2019.subsystems.Navigation;
 import edu.wpi.first.wpilibj.command.CommandGroup;
 
 public class Test extends CommandGroup {
     public Test() {
-        addSequential(new FollowGaffer());
+        addSequential(new SetLastKnownLocation(Navigation.LEVEL_1_CENTER));
+        addSequential(new FollowRetroreflective(Navigation.CARGO_END_LEFT));
     }
 }

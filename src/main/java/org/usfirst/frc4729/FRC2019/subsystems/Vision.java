@@ -181,10 +181,10 @@ public class Vision extends Subsystem {
                 rect.size.width = height;
             }
             if (angle > 0 && angle < 90) {
-                SmartDashboard.putNumber("left rect", angle);
+                // SmartDashboard.putNumber("left rect", angle);
                 leftRects.add(rect);
             } else if (angle >= 90 && angle < 180) {
-                SmartDashboard.putNumber("right rect", angle);
+                // SmartDashboard.putNumber("right rect", angle);
                 rightRects.add(rect);
             }
         }
@@ -217,7 +217,7 @@ public class Vision extends Subsystem {
                                      - (output.width() / 2);
             retroreflectiveRelativeAngle = (retroreflectiveOffsetX / (output.width() / 2)) * cameraConeHalfAngle;
             pair[0].angle += 90;
-            pair[1].angle += 90;
+            // pair[1].angle += 90;
             Imgproc.ellipse(output, pair[0], new Scalar(0, 0, 255));
             Imgproc.ellipse(output, pair[1], new Scalar(0, 0, 255));
             Imgproc.circle(output, new Point((pair[0].center.x + pair[1].center.x) / 2, (pair[0].center.y + pair[1].center.y) / 2), 5, new Scalar(0, 255, 0));
@@ -261,15 +261,15 @@ public class Vision extends Subsystem {
     }
 
     private boolean endVisible(Point end, Mat output) {
-        System.out.println(end.x);
-        System.out.println(end.y);
-        System.out.println(output.width());
-        System.out.println(output.height());
-        System.out.println((end.x > 2));
-        System.out.println((end.x < output.width() - 2));
-        System.out.println((end.y > 2));
-        System.out.println((end.y < output.height() - 2));
-        System.out.println("=====");
+        // System.out.println(end.x);
+        // System.out.println(end.y);
+        // System.out.println(output.width());
+        // System.out.println(output.height());
+        // System.out.println((end.x > 2));
+        // System.out.println((end.x < output.width() - 2));
+        // System.out.println((end.y > 2));
+        // System.out.println((end.y < output.height() - 2));
+        // System.out.println("=====");
         return (end.x > 2 &&
                 end.x < output.width() - 2 &&
                 end.y > 2 &&

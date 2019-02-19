@@ -30,11 +30,16 @@ public class FollowGaffer extends Command {
     double angleMinPower = 0;
     double angleMaxPower = 1;
 
+    double offsetGoRange = 10;
+    double angleGoRange = 10;
+
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
         double forwards = 0;
-        if (Robot.vision.gafferEndVisible) {
+        if (Robot.vision.gafferEndVisible
+            || (Util.isInRange(Robot.vision.gafferOffsetX, 0, offsetGoRange)
+                && Util.isInRange(Robot.vision.gafferAngle, 0, angleGoRange))) {
             forwards = 1;
         }
         
@@ -52,10 +57,9 @@ public class FollowGaffer extends Command {
                                   angleSlowRange,
                                   angleStopRange);
 
-        SmartDashboard.putNumber("forwards", forwards);
-        SmartDashboard.putNumber("sideways", sideways);
-        SmartDashboard.putNumber("turn", turn);
-        SmartDashboard.putBoolean("gafferEndVisible", Robot.vision.gafferEndVisible);
+        // SmartDashboard.putNumber("forwards", forwards);
+        // SmartDashboard.putNumber("sideways", sideways);
+        // SmartDashboard.putNumber("turn", turn);
 
         Robot.drive.omni(forwards, sideways, turn);
     }

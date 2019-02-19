@@ -109,11 +109,11 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        if (autoDo.getSelected().booleanValue()) {
+        // if (autoDo.getSelected().booleanValue()) {
             // auto = new Auto(autoStart.getSelected(), autoFirstCargoEnd.getSelected(), autoFirstLoadingStation.getSelected());
             auto = new Test();
-            if (auto != null) auto.start();
-        }
+            auto.start();
+        // }
     }
 
     @Override

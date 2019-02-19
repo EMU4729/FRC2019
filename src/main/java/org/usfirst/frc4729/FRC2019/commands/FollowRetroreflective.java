@@ -8,6 +8,8 @@
 package org.usfirst.frc4729.FRC2019.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import org.usfirst.frc4729.FRC2019.Robot;
 import org.usfirst.frc4729.FRC2019.Util;
 import org.usfirst.frc4729.FRC2019.subsystems.Navigation.Location;
@@ -32,35 +34,41 @@ public class FollowRetroreflective extends Command {
     double stopRange = 0;
     double minPower = 0;
     double maxPower = 1;
+    double edgeRange = 20;
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
         double forwards = 1;
         double sideways = sidewaysFromAngle(Robot.vision.retroreflectiveRelativeAngle);
+
         double turn = Util.linear(Robot.navigation.relativeAngle(location.angle),
                                   0,
                                   minPower,
                                   maxPower,
                                   slowRange,
-                                  stopRange)
-                      * (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
+                                  stopRange);
+        double distanceToEdge = (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
+        if (distanceToEdge < edgeRange) {
+            turn = -Math.signum(Robot.vision.retroreflectiveRelativeAngle);
+        }
+
+        SmartDashboard.putNumber("Robot.vision.retroreflectiveRelativeAngle", Robot.vision.retroreflectiveRelativeAngle);
+        SmartDashboard.putNumber("forwards", forwards);
+        SmartDashboard.putNumber("sideways", sideways);
+        SmartDashboard.putNumber("turn", turn);
 
         Robot.drive.omni(forwards, sideways, turn);
     }
 
     private double sidewaysFromAngle(double angle) {
-        double y = Math.sin(angle);
-        double x = Math.cos(angle);
-        double sideways = (1 / y) * x;
-        if (sideways > 1) sideways = 1;
-        return sideways;
+        return Math.sin(Math.toRadians(angle));
     }
 
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
-        return Robot.vision.gafferAvailable;
+        return false;// Robot.vision.gafferAvailable; // TODO
     }
 
     // Called once after isFinished returns true
