@@ -30,12 +30,12 @@ import org.usfirst.frc4729.FRC2019.subsystems.Navigation.Location;
  * the project.
  */
 public class Robot extends TimedRobot {
-    Command auto;
+    private Command auto;
 
-    SendableChooser<Boolean> autoDo = new SendableChooser<>();
-    SendableChooser<Location> autoStart = new SendableChooser<>();
-    SendableChooser<Location> autoFirstCargoEnd = new SendableChooser<>();
-    SendableChooser<Location> autoFirstLoadingStation = new SendableChooser<>();
+    private SendableChooser<Boolean> autoDo = new SendableChooser<>();
+    private SendableChooser<Location> autoStart = new SendableChooser<>();
+    private SendableChooser<Location> autoFirstCargoEnd = new SendableChooser<>();
+    private SendableChooser<Location> autoFirstLoadingStation = new SendableChooser<>();
 
     public static OI oi;
     public static Drive drive;

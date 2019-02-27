@@ -56,12 +56,14 @@ public class Drive extends Subsystem {
         // Put code here to be run every loop
 
     }
+
+    private static final double DEADZONE = 0.15;
+    private static final double SPEED = 1;
     
     public void omni(double forwards, double sideways, double turn) {
-        // SmartDashboard.putNumber("forwards", forwards);
-        // SmartDashboard.putNumber("sideways", sideways);
-        // SmartDashboard.putNumber("turn", turn);
-        forwards = -forwards;
+        forwards = deadzoneMap(forwards) * -SPEED;
+        sideways = deadzoneMap(sideways) * SPEED;
+        turn = deadzoneMap(turn) * SPEED;
 
         List<Double> power = Arrays.asList(forwards + sideways + turn,  // leftFront
                                            forwards - sideways + turn,  // leftBack
@@ -81,6 +83,14 @@ public class Drive extends Subsystem {
                   power.get(1).doubleValue(),
                   power.get(2).doubleValue(),
                   power.get(3).doubleValue());
+    }
+
+    private double deadzoneMap(double value) {
+        if (value < DEADZONE) {
+            return 0;
+        } else {
+            return (value - DEADZONE) * (1 / (1 - DEADZONE));
+        }
     }
 
     public void setMotors(double leftFront, double leftBack, double rightFront, double rightBack) {
