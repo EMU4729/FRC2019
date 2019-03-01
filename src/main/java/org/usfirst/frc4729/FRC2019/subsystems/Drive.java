@@ -26,23 +26,23 @@ public class Drive extends Subsystem {
     // public double rampate = 6; //volts/second
     // public int profile = 0; //0 or 1
 
-    private TalonSRX leftFrontMotor;
-    private TalonSRX rightFrontMotor;
-    private TalonSRX leftBackMotor;
-    private TalonSRX rightBackMotor;
+    // private TalonSRX leftFrontMotor;
+    // private TalonSRX rightFrontMotor;
+    // private TalonSRX leftBackMotor;
+    // private TalonSRX rightBackMotor;
 
     public Drive() {
-        leftFrontMotor = new TalonSRX(6);
-        leftFrontMotor.setInverted(false);
+        // leftFrontMotor = new TalonSRX(6);
+        // leftFrontMotor.setInverted(false);
         
-        rightFrontMotor = new TalonSRX(11);
-        rightFrontMotor.setInverted(false);
+        // rightFrontMotor = new TalonSRX(11);
+        // rightFrontMotor.setInverted(false);
         
-        leftBackMotor = new TalonSRX(5);
-        leftBackMotor.setInverted(false);
+        // leftBackMotor = new TalonSRX(5);
+        // leftBackMotor.setInverted(false);
         
-        rightBackMotor = new TalonSRX(12);
-        rightBackMotor.setInverted(false);
+        // rightBackMotor = new TalonSRX(12);
+        // rightBackMotor.setInverted(false);
     }
 
     @Override
@@ -94,10 +94,10 @@ public class Drive extends Subsystem {
     }
 
     public void setMotors(double leftFront, double leftBack, double rightFront, double rightBack) {
-        leftFrontMotor.set(ControlMode.PercentOutput, leftFront);
-        leftBackMotor.set(ControlMode.PercentOutput, leftBack);
-        rightFrontMotor.set(ControlMode.PercentOutput, rightFront);
-        rightBackMotor.set(ControlMode.PercentOutput, rightBack);
+        // leftFrontMotor.set(ControlMode.PercentOutput, leftFront);
+        // leftBackMotor.set(ControlMode.PercentOutput, leftBack);
+        // rightFrontMotor.set(ControlMode.PercentOutput, rightFront);
+        // rightBackMotor.set(ControlMode.PercentOutput, rightBack);
     }
 
     public void control() {

@@ -34,7 +34,7 @@ public class FollowRetroreflective extends Command {
     double stopRange = 0;
     double minPower = 0;
     double maxPower = 1;
-    double edgeRange = 20;
+    double edgeRange = 0.2;
 
     // Called repeatedly when this Command is scheduled to run
     @Override
@@ -54,6 +54,8 @@ public class FollowRetroreflective extends Command {
         }
 
         SmartDashboard.putNumber("Robot.vision.retroreflectiveRelativeAngle", Robot.vision.retroreflectiveRelativeAngle);
+        SmartDashboard.putNumber("Robot.vision.cameraConeHalfAngle", Robot.vision.cameraConeHalfAngle);
+        SmartDashboard.putNumber("Robot.navigation.relativeAngle(location.angle)", Robot.navigation.relativeAngle(location.angle));
         SmartDashboard.putNumber("forwards", forwards);
         SmartDashboard.putNumber("sideways", sideways);
         SmartDashboard.putNumber("turn", turn);

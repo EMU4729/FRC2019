@@ -8,8 +8,13 @@
 package org.usfirst.frc4729.FRC2019.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import org.usfirst.frc4729.FRC2019.Util;
+
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.SPI.Port;
 
 /**
  * Add your docs here.
@@ -33,16 +38,18 @@ public class Navigation extends Subsystem {
     public static final Location LOADING_STATION_LEFT = new Location(660, 0, 270);
     public static final Location LOADING_STATION_RIGHT = new Location(7532, 0, 270);
 
-    // public AnalogGyro gyro; // TODO
+    public AnalogGyro gyro;
     public Location lastKnownLocation = null;
     public double referenceAngle = 0;
 
     public Navigation() {
-        // gyro = new AnalogGyro(1);
+        // gyro = new ADXRS450_Gyro(Port.kOnboardCS1);
+        gyro = new AnalogGyro(0);
     }
 
     public double getRobotAngle() {
-        return 0;//Util.normAngle(referenceAngle + gyro.getAngle());
+        SmartDashboard.putNumber("gryo angle", gyro.getAngle());
+        return Util.normAngle(referenceAngle + gyro.getAngle());
     }
 
     public double relativeAngle(double angle) {
@@ -55,7 +62,7 @@ public class Navigation extends Subsystem {
 
     public void setLastKnownLocation(Location location) {
         lastKnownLocation = location;
-        // gyro.reset();
+        gyro.reset();
     }
 
     public static double angleBetweenLocations(Location from, Location to) {
