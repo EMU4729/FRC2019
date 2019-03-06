@@ -38,13 +38,14 @@ public class Navigation extends Subsystem {
     public static final Location LOADING_STATION_LEFT = new Location(660, 0, 270);
     public static final Location LOADING_STATION_RIGHT = new Location(7532, 0, 270);
 
-    public AnalogGyro gyro;
+    public ADXRS450_Gyro gyro;
+    // public AnalogGyro gyro;
     public Location lastKnownLocation = null;
     public double referenceAngle = 0;
 
     public Navigation() {
-        // gyro = new ADXRS450_Gyro(Port.kOnboardCS1);
-        gyro = new AnalogGyro(0);
+        gyro = new ADXRS450_Gyro();
+        // gyro = new AnalogGyro(0);
     }
 
     public double getRobotAngle() {
