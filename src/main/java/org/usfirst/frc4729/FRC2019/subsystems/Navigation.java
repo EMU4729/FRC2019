@@ -49,12 +49,11 @@ public class Navigation extends Subsystem {
     }
 
     public double getRobotAngle() {
-        SmartDashboard.putNumber("gryo angle", gyro.getAngle());
         return Util.normAngle(referenceAngle + gyro.getAngle());
     }
 
     public double relativeAngle(double angle) {
-        return Util.normAngle(getRobotAngle() - angle) - 180;
+        return Util.normAngle(getRobotAngle() - angle);
     }
 
     public double angleToLocation(Location location) {
@@ -63,6 +62,7 @@ public class Navigation extends Subsystem {
 
     public void setLastKnownLocation(Location location) {
         lastKnownLocation = location;
+        referenceAngle = location.angle;
         gyro.reset();
     }
 

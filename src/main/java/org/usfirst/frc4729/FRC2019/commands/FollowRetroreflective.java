@@ -34,13 +34,19 @@ public class FollowRetroreflective extends Command {
     double stopRange = 0;
     double minPower = 0;
     double maxPower = 1;
-    double edgeRange = 0.2;
+    double edgeRange = 0.5;
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        double forwards = 1;
-        double sideways = sidewaysFromAngle(Robot.vision.retroreflectiveRelativeAngle);
+        // TODO next
+        // double sideways = Math.sin(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle)) / Math.cos(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle));
+
+
+        // double actualSideways = Math.sin(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle));
+
+        // double forwards = ;
+        // double sideways = Math.sin(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle));
 
         double turn = Util.linear(Robot.navigation.relativeAngle(location.angle),
                                   0,
@@ -51,20 +57,14 @@ public class FollowRetroreflective extends Command {
         double distanceToEdge = (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
         if (distanceToEdge < edgeRange) {
             turn = -Math.signum(Robot.vision.retroreflectiveRelativeAngle);
+            forwards = 0;
         }
 
-        SmartDashboard.putNumber("Robot.vision.retroreflectiveRelativeAngle", Robot.vision.retroreflectiveRelativeAngle);
-        SmartDashboard.putNumber("Robot.vision.cameraConeHalfAngle", Robot.vision.cameraConeHalfAngle);
-        SmartDashboard.putNumber("Robot.navigation.relativeAngle(location.angle)", Robot.navigation.relativeAngle(location.angle));
         SmartDashboard.putNumber("forwards", forwards);
         SmartDashboard.putNumber("sideways", sideways);
         SmartDashboard.putNumber("turn", turn);
 
         Robot.drive.omni(forwards, sideways, turn);
-    }
-
-    private double sidewaysFromAngle(double angle) {
-        return Math.sin(Math.toRadians(angle));
     }
 
     // Make this return true when this Command no longer needs to run execute()
