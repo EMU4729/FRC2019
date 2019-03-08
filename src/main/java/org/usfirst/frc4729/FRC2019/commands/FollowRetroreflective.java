@@ -57,11 +57,14 @@ public class FollowRetroreflective extends Command {
                                   maxPower,
                                   slowRange,
                                   stopRange);
-        double distanceToEdge = (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
-        if (distanceToEdge < edgeRange) {
-            turn = Math.signum(Robot.vision.retroreflectiveRelativeAngle);
-            forwards = 0;
-        }
+                                  
+        // if (Robot.vision.retroreflectiveAvailable) {
+            double distanceToEdge = (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
+            if (distanceToEdge < edgeRange) {
+                turn = Math.signum(Robot.vision.retroreflectiveRelativeAngle);
+                forwards = 0;
+            }
+        // }
 
         SmartDashboard.putNumber("forwards", forwards);
         SmartDashboard.putNumber("sideways", sideways);
