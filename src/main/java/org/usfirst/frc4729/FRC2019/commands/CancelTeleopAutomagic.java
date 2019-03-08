@@ -25,8 +25,8 @@ public class CancelTeleopAutomagic extends InstantCommand {
         requires(Robot.mechanism);
     }
 
-    // Called once when the command executes
-    @Override
-    protected void initialize() {
-    }
+    // Why is there nothing here? Just by requiring the
+    // subsystems used by `TeleopAutomagic.java`, that
+    // command will be interrupted, this command will
+    // simply end, and the automagic will be cancelled.
 }

@@ -39,14 +39,17 @@ public class FollowRetroreflective extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        // TODO next
-        // double sideways = Math.sin(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle)) / Math.cos(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle));
+        double forwards = 1;
 
-
-        // double actualSideways = Math.sin(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle));
-
-        // double forwards = ;
-        // double sideways = Math.sin(Math.toRadians(Robot.vision.retroreflectiveRelativeAngle));
+        double angle = Robot.vision.retroreflectiveRelativeAngle;
+        if (angle < -45) angle = -45;
+        if (angle >  45) angle =  45;
+        // SmartDashboard.putNumber("sideways sin", Math.sin(Math.toRadians(angle)));
+        // SmartDashboard.putNumber("sideways cos", Math.cos(Math.toRadians(angle)));
+        // SmartDashboard.putNumber("retroreflective angle", Robot.vision.retroreflectiveRelativeAngle);
+        // SmartDashboard.putNumber("clipped angle", angle);
+        double sideways =   Math.sin(Math.toRadians(angle))
+                          / Math.cos(Math.toRadians(angle));
 
         double turn = Util.linear(Robot.navigation.relativeAngle(location.angle),
                                   0,
@@ -56,7 +59,7 @@ public class FollowRetroreflective extends Command {
                                   stopRange);
         double distanceToEdge = (1 - Math.abs(Robot.vision.retroreflectiveRelativeAngle) / Robot.vision.cameraConeHalfAngle);
         if (distanceToEdge < edgeRange) {
-            turn = -Math.signum(Robot.vision.retroreflectiveRelativeAngle);
+            turn = Math.signum(Robot.vision.retroreflectiveRelativeAngle);
             forwards = 0;
         }
 

@@ -61,7 +61,7 @@ public class Drive extends Subsystem {
     private static final double SPEED = 1;
     
     public void omni(double forwards, double sideways, double turn) {
-        forwards = deadzoneMap(forwards) * -SPEED;
+        forwards = deadzoneMap(forwards) * SPEED;
         sideways = deadzoneMap(sideways) * SPEED;
         turn = deadzoneMap(turn) * SPEED;
 
