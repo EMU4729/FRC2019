@@ -38,7 +38,6 @@ public class Auto extends CommandGroup {
         Location secondCargoEnd = second(firstCargoEnd, Navigation.CARGO_END_LEFT, Navigation.CARGO_END_RIGHT);
         Location secondLoadingStation = second(firstLoadingStation, Navigation.LOADING_STATION_LEFT, Navigation.LOADING_STATION_RIGHT);
 
-        addSequential(new CalibrateWinch());
         addSequential(new SetLastKnownLocation(start));
         go(firstCargoEnd);
         go(firstLoadingStation);
@@ -50,7 +49,6 @@ public class Auto extends CommandGroup {
         addSequential(new RotateTowards(location));
         addSequential(new FollowRetroreflective(location));
         addSequential(new FollowGaffer());
-        addSequential(new SetWinchLevel(0)); 
         addSequential(new Eject());
         addSequential(new Retreat());
         addSequential(new SetLastKnownLocation(location));

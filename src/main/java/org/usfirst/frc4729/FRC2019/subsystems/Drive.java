@@ -17,7 +17,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
 public class Drive extends Subsystem {
-
     // public double kp = 1; //poportionalised
     // public double ki = 9; //interagal
     // public double kd = 7; //differental
@@ -26,23 +25,26 @@ public class Drive extends Subsystem {
     // public double rampate = 6; //volts/second
     // public int profile = 0; //0 or 1
 
-    // private TalonSRX leftFrontMotor;
-    // private TalonSRX rightFrontMotor;
-    // private TalonSRX leftBackMotor;
-    // private TalonSRX rightBackMotor;
+    private TalonSRX leftFrontMotor;
+    private TalonSRX rightFrontMotor;
+    private TalonSRX leftBackMotor;
+    private TalonSRX rightBackMotor;
+
+    private boolean slowMode = false;
+    private double slowSpeed = 0.5;
 
     public Drive() {
-        // leftFrontMotor = new TalonSRX(6);
-        // leftFrontMotor.setInverted(false);
+        leftFrontMotor = new TalonSRX(6);
+        leftFrontMotor.setInverted(false);
         
-        // rightFrontMotor = new TalonSRX(11);
-        // rightFrontMotor.setInverted(false);
+        rightFrontMotor = new TalonSRX(11);
+        rightFrontMotor.setInverted(false);
         
-        // leftBackMotor = new TalonSRX(5);
-        // leftBackMotor.setInverted(false);
+        leftBackMotor = new TalonSRX(5);
+        leftBackMotor.setInverted(false);
         
-        // rightBackMotor = new TalonSRX(12);
-        // rightBackMotor.setInverted(false);
+        rightBackMotor = new TalonSRX(12);
+        rightBackMotor.setInverted(false);
     }
 
     @Override
@@ -57,16 +59,15 @@ public class Drive extends Subsystem {
 
     }
 
-    private static final double DEADZONE = 0.15;
     private static final double SPEED = 1;
     
     public void omni(double forwards, double sideways, double turn) {
-        forwards = deadzoneMap(forwards) * SPEED;
-        sideways = deadzoneMap(sideways) * SPEED;
-        turn = deadzoneMap(turn) * SPEED;
+        forwards *= SPEED;
+        sideways *= SPEED;
+        turn *= SPEED;
 
-        List<Double> power = Arrays.asList(forwards + sideways + turn,  // leftFront
-                                           forwards - sideways + turn,  // leftBack
+        List<Double> power = Arrays.asList(forwards - sideways + turn,  // leftFront
+                                           forwards + sideways + turn,  // leftBack
                                           -forwards + sideways + turn,  // rightFront
                                           -forwards - sideways + turn); // rightBack
                                           
@@ -79,25 +80,28 @@ public class Drive extends Subsystem {
             power = power.stream().map(p -> p / max).collect(Collectors.toList());
         }
 
-        setMotors(power.get(0).doubleValue(),
-                  power.get(1).doubleValue(),
-                  power.get(2).doubleValue(),
-                  power.get(3).doubleValue());
-    }
-
-    private double deadzoneMap(double value) {
-        if (value < DEADZONE) {
-            return 0;
-        } else {
-            return (value - DEADZONE) * (1 / (1 - DEADZONE));
-        }
+        double factor = (slowMode ? slowSpeed : 1);
+        // SmartDashboard.putNumber("factor", factor);
+        // double compensation = 0.9;
+        setMotors(power.get(0).doubleValue() * factor * 0.6,
+                  power.get(1).doubleValue() * factor,
+                  power.get(2).doubleValue() * factor,
+                  power.get(3).doubleValue() * factor * 0.6);
     }
 
     public void setMotors(double leftFront, double leftBack, double rightFront, double rightBack) {
-        // leftFrontMotor.set(ControlMode.PercentOutput, leftFront);
-        // leftBackMotor.set(ControlMode.PercentOutput, leftBack);
-        // rightFrontMotor.set(ControlMode.PercentOutput, rightFront);
-        // rightBackMotor.set(ControlMode.PercentOutput, rightBack);
+        leftFrontMotor.set(ControlMode.PercentOutput, leftFront);
+        leftBackMotor.set(ControlMode.PercentOutput, leftBack);
+        rightFrontMotor.set(ControlMode.PercentOutput, rightFront);
+        rightBackMotor.set(ControlMode.PercentOutput, rightBack);
+        SmartDashboard.putNumber("leftFront", leftFront);
+        SmartDashboard.putNumber("leftBack", leftBack);
+        SmartDashboard.putNumber("rightFront", rightFront);
+        SmartDashboard.putNumber("rightBack", rightBack);
+    }
+
+    public void toggleSlowMode() {
+        slowMode = !slowMode;
     }
 
     public void control() {

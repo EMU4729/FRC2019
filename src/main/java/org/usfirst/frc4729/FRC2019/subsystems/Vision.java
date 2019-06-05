@@ -62,7 +62,7 @@ public class Vision extends Subsystem {
             setupCamera(i, outputStreams, sinks);
         }
         
-        cameras[RETROREFLECTIVE].setExposureManual(20);
+        // cameras[RETROREFLECTIVE].setExposureManual(20);
     }
 
     private void setupCamera(int camera, CvSource[] outputStreams, CvSink[] sinks) {
@@ -209,6 +209,12 @@ public class Vision extends Subsystem {
                                 - (((b[0].size.width * b[0].size.height) + (b[1].size.width * b[1].size.height)) / 2);
             return difference.intValue();
         });
+
+        List<RotatedRect[]> sorted = pairs.stream().sorted((a, b) -> {
+            Double difference =   (((a[0].size.width * a[0].size.height) + (a[1].size.width * a[1].size.height)) / 2)
+                                - (((b[0].size.width * b[0].size.height) + (b[1].size.width * b[1].size.height)) / 2);
+            return difference.intValue();
+        }).collect(Collectors.toList());
 
         retroreflectiveAvailable = max.isPresent();
         if (retroreflectiveAvailable) {

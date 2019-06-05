@@ -10,10 +10,16 @@ package org.usfirst.frc4729.FRC2019.commands;
 import org.usfirst.frc4729.FRC2019.Robot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 
 public class Omni extends Command {
-    Joystick leftStick = new Joystick(0);
-    Joystick rightStick = new Joystick(1);
+    // Joystick leftStick = new Joystick(0);
+    // Joystick rightStick = new Joystick(1);
+
+    private XboxController controller = new XboxController(0);
 
     public Omni() {
         // Use requires() here to declare subsystem dependencies
@@ -29,7 +35,11 @@ public class Omni extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.drive.omni(-leftStick.getY(), leftStick.getX(), rightStick.getX());
+        // SmartDashboard.putNumber("forwards before processing ...", -controller.getY(Hand.kLeft));
+        // SmartDashboard.putNumber("sideways before processing ...", controller.getX(Hand.kLeft));
+        // SmartDashboard.putNumber("turn before processing ...", controller.getX(Hand.kRight));
+        double turnFactor = 0.7;
+        Robot.drive.omni(-controller.getY(Hand.kRight), controller.getX(Hand.kRight), controller.getX(Hand.kLeft) * turnFactor);
     }
 
     // Make this return true when this Command no longer needs to run execute()

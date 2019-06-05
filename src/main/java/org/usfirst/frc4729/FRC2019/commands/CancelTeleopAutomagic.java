@@ -21,8 +21,8 @@ public class CancelTeleopAutomagic extends InstantCommand {
         super();
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
-        requires(Robot.drive);
-        requires(Robot.mechanism);
+        // requires(Robot.drive); TODO
+        // requires(Robot.mechanism); TODO
     }
 
     // Why is there nothing here? Just by requiring the

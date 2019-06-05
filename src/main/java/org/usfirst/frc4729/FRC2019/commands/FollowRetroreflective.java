@@ -76,7 +76,7 @@ public class FollowRetroreflective extends Command {
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
-        return false;// Robot.vision.gafferAvailable; // TODO
+        return Robot.vision.gafferAvailable; // TODO
     }
 
     // Called once after isFinished returns true

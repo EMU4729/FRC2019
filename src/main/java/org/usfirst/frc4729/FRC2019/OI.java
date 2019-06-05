@@ -43,9 +43,7 @@ public class OI {
     // public Button rightTrigger;
     // public Button rightButton11;
 
-    public Button b;
     public Button x;
-    public Button y;
     public Button start;
     public Button back;
     public Button rb;
@@ -56,19 +54,15 @@ public class OI {
         boolean actualMatch = (DriverStation.getInstance().getMatchType() != MatchType.None);
 
         if (actualMatch || controller.getName().length() > 0) {
-            b     = new JoystickButton(controller, 2);
             x     = new JoystickButton(controller, 3);
-            y     = new JoystickButton(controller, 4);
             start = new JoystickButton(controller, 8);
             back  = new JoystickButton(controller, 7);
             rb    = new JoystickButton(controller, 6);
 
-            y.whenPressed(new WinchUp());
-            b.whenPressed(new WinchDown());
             x.whenPressed(new Eject());
             start.whenPressed(new TeleopAutomagic());
             back.whenPressed(new CancelTeleopAutomagic());
-            rb.whenPressed(new CalibrateWinch());
+            rb.whenPressed(new ToggleSlowMode());
         }
 
         // if (actualMatch || leftStick.getName().length() > 0) {

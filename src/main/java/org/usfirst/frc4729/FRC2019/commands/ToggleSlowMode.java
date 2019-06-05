@@ -11,17 +11,16 @@ import org.usfirst.frc4729.FRC2019.Robot;
 
 import edu.wpi.first.wpilibj.command.InstantCommand;
 
-public class WinchUp extends InstantCommand {
-    public WinchUp() {
+public class ToggleSlowMode extends InstantCommand {
+    public ToggleSlowMode() {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
         super();
-        requires(Robot.mechanism);
     }
 
     // Called just before this Command runs the first time
     @Override
     protected void initialize() {
-        Robot.mechanism.up();
+        Robot.drive.toggleSlowMode();
     }
 }

@@ -9,46 +9,45 @@ package org.usfirst.frc4729.FRC2019.commands;
 
 import org.usfirst.frc4729.FRC2019.Robot;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.command.Command;
 
-public class CalibrateWinch extends Command {
-    public CalibrateWinch() {
+public class WinchControl extends Command {
+    private XboxController controller = new XboxController(0);
+
+    public WinchControl() {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
-        requires(Robot.mechanism);
+        //requires(Robot.mechanism);
     }
 
     // Called just before this Command runs the first time
     @Override
     protected void initialize() {
-        Robot.mechanism.winchCalibrating = true;
     }
 
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.mechanism.move(-1);
+        double up = controller.getYButton() ? 1 : 0;
+        double down = controller.getBButton() ? 1 : 0;
+        //Robot.mechanism.move(up - down);
     }
 
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
-        return Robot.mechanism.isAtLimitBottom();
+        return false;
     }
 
     // Called once after isFinished returns true
     @Override
     protected void end() {
-        Robot.mechanism.move(0);
-        Robot.mechanism.resetWinchEncoder();
-        Robot.mechanism.winchCalibrating = false;
-        Robot.mechanism.winchCalibrated = true;
     }
 
     // Called when another command which requires one or more of the same
     // subsystems is scheduled to run
     @Override
     protected void interrupted() {
-        end();
     }
 }
