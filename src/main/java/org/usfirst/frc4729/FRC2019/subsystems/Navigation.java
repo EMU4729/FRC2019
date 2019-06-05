@@ -43,9 +43,8 @@ public class Navigation extends Subsystem {
     public Location lastKnownLocation = null;
     public double referenceAngle = 0;
 
-    public Navigation() {
-        gyro = new ADXRS450_Gyro();
-        // gyro = new AnalogGyro(0);
+    public Navigation(ADXRS450_Gyro gyro) {
+        gyro = this.gyro;
     }
 
     public double getRobotAngle() {
