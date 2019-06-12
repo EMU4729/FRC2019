@@ -1,6 +1,7 @@
 package org.usfirst.frc4729.FRC2019.subsystems;
 
 import java.util.List;
+import java.lang.Math;
 import java.awt.Robot;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import org.usfirst.frc4729.FRC2019.commands.*;
 import org.usfirst.frc4729.FRC2019.objects.PidMotor;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.command.Subsystem;
@@ -38,14 +40,17 @@ public class Drive extends Subsystem {
     private PidMotor leftBackMotor;
     private PidMotor rightBackMotor;
     private ADXRS450_Gyro gyro;
+    private double forwards;
+    private double sideways;
+    private double turn;
 
     public Drive(ADXRS450_Gyro gyro) {
-        leftFrontMotor = new PidMotor(6, 0, 0, 0);
-        rightFrontMotor = new PidMotor(11, 0, 0, 0);      
-        leftBackMotor = new PidMotor(5, 0, 0, 0);        
-        rightBackMotor = new PidMotor(12, 0, 0, 0);
+        leftFrontMotor = new PidMotor(6, 1, 0, 0);
+        rightFrontMotor = new PidMotor(11, 1, 0, 0);      
+        leftBackMotor = new PidMotor(5, 1, 0, 0);        
+        rightBackMotor = new PidMotor(12, 1, 0, 0);
 
-        gyro = this.gyro;
+        this.gyro = gyro;
     }
 
     @Override
@@ -56,22 +61,10 @@ public class Drive extends Subsystem {
     
     @Override
     public void periodic() {
-        // Put code here to be run every loop
-
-    }
-
-    private static final double DEADZONE = 0.15;
-    private static final double SPEED = 1;
-    
-    public void omni(double forwards, double sideways, double turn) {
-        forwards = deadzoneMap(forwards) * SPEED;
-        sideways = deadzoneMap(sideways) * SPEED;
-        turn = deadzoneMap(turn) * SPEED;
-
         List<Double> power = Arrays.asList(forwards + sideways + turn,  // leftFront
                                            forwards - sideways + turn,  // leftBack
-                                          -forwards + sideways + turn,  // rightFront
-                                          -forwards - sideways + turn); // rightBack
+                                          -forwards - sideways + turn,  // rightFront
+                                          -forwards + sideways + turn); // rightBack
                                           
         double max = power.stream().map(p -> Math.abs(p)).max((a, b) -> {
             Double difference = a - b;
@@ -88,7 +81,17 @@ public class Drive extends Subsystem {
                   power.get(1).doubleValue(),
                   power.get(2).doubleValue(),
                   power.get(3).doubleValue(),
-                  turnError);
+                  turnError);  // Put code here to be run every loop
+    }
+
+    private static final double DEADZONE = 0.15;
+    private static final double SPEED = 1;
+    
+    public void omni(double forwards, double sideways, double turn) {
+        this.forwards = forwards;//deadzoneMap(forwardsIn) * SPEED;
+        this.sideways = sideways;//deadzoneMap(sidewaysIn) * SPEED;
+        this.turn = turn;//deadzoneMap(turn) * SPEED;  
+        DriverStation.reportWarning("Code has been reached", false);
     }
 
     private double deadzoneMap(double value) {
@@ -104,6 +107,19 @@ public class Drive extends Subsystem {
         leftBackMotor.Update(leftBack, turnError);
         rightFrontMotor.Update(rightFront, turnError);
         rightBackMotor.Update(rightBack, turnError);
+        double leftFrontCurrentSpeed = leftFrontMotor.GetCurrentSpeed();
+        double leftBackCurrentSpeed = leftBackMotor.GetCurrentSpeed();
+        double rightFrontCurrentSpeed = rightFrontMotor.GetCurrentSpeed();
+        double rightBackCurrentSpeed = rightBackMotor.GetCurrentSpeed();
+        double forwardsSpeed = leftFrontCurrentSpeed + leftBackCurrentSpeed - (rightFrontCurrentSpeed + rightBackCurrentSpeed);
+        double sidewaysSpeed = leftFrontCurrentSpeed + rightFrontCurrentSpeed - (leftBackCurrentSpeed + rightBackCurrentSpeed);
+        double turningSpeed = leftFrontCurrentSpeed + rightFrontCurrentSpeed + leftBackCurrentSpeed + rightBackCurrentSpeed;
+        SmartDashboard.putNumber("Forwards current speed", forwardsSpeed);
+        SmartDashboard.putNumber("Sideways current speed", sidewaysSpeed);
+        SmartDashboard.putNumber("Turn current speed", turningSpeed);
+        SmartDashboard.putNumber("Desired forwards", forwards);
+        SmartDashboard.putNumber("Desired sideways", sideways);
+        SmartDashboard.putNumber("Desired turn", turn);
     }
 }
 

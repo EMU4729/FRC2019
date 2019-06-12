@@ -27,24 +27,29 @@ public class PidMotor {
     private Double kd;
     private double previousError = 0;
     private double integral = 0;
-    private double previous_time = 0;
+    private double previousTime = 0;
+    private double currentSpeed = 0;
 
     public PidMotor(int motorNum, double kp, double ki, double kd) {
         motor = new TalonSRX(motorNum);
         motor.setInverted(false);
         timer = new Timer();
-        kp = this.kp;
-        ki = this.ki;
-        kd = this.kd;
+        this.kp = kp;
+        this.ki = ki;
+        this.kd = kd;
     }
 
-    public void Update(double setPoint, double turnError){
-        double error = setPoint - previousError;
+    public void Update(double setPoint, double turnError) {
+        double error = setPoint - previousError + turnError; 
         
-        integral += error * (timer.get() - previous_time);
-        double derivative = (error - previousError) / (timer.get() - previous_time);
-        double output = kp * error + ki * integral + kd * derivative;
+        integral += error * (timer.get() - previousTime);
+        double derivative = (error - previousError) / (timer.get() - previousTime);
+        currentSpeed = kp * error + ki * integral + kd * derivative;
         previousError = error;
-        motor.set(ControlMode.PercentOutput, output);
+        motor.set(ControlMode.PercentOutput, currentSpeed);
+    }
+
+    public double GetCurrentSpeed() {
+        return currentSpeed;
     }
 }
