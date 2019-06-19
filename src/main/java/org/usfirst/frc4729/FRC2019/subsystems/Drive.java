@@ -45,10 +45,10 @@ public class Drive extends Subsystem {
     private double turn;
 
     public Drive(ADXRS450_Gyro gyro) {
-        leftFrontMotor = new PidMotor(6, 1, 0, 0);
-        rightFrontMotor = new PidMotor(11, 1, 0, 0);      
-        leftBackMotor = new PidMotor(5, 1, 0, 0);        
-        rightBackMotor = new PidMotor(12, 1, 0, 0);
+        leftFrontMotor = new PidMotor(6, 0.1, 0, 0);
+        rightFrontMotor = new PidMotor(11, 0.1, 0, 0);      
+        leftBackMotor = new PidMotor(5, 0.1, 0, 0);        
+        rightBackMotor = new PidMotor(12, 0.1, 0, 0);
 
         this.gyro = gyro;
     }
@@ -103,6 +103,7 @@ public class Drive extends Subsystem {
     }
 
     public void setMotors(double leftFront, double leftBack, double rightFront, double rightBack, double turnError) {
+        Double n = null;
         leftFrontMotor.Update(leftFront, turnError);
         leftBackMotor.Update(leftBack, turnError);
         rightFrontMotor.Update(rightFront, turnError);
@@ -120,6 +121,7 @@ public class Drive extends Subsystem {
         SmartDashboard.putNumber("Desired forwards", forwards);
         SmartDashboard.putNumber("Desired sideways", sideways);
         SmartDashboard.putNumber("Desired turn", turn);
+        SmartDashboard.putBoolean("forwards speed == ", forwardsSpeed == 0);
     }
 }
 

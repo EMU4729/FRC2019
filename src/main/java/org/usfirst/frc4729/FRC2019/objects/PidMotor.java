@@ -37,10 +37,11 @@ public class PidMotor {
         this.kp = kp;
         this.ki = ki;
         this.kd = kd;
+        timer.start();
     }
 
     public void Update(double setPoint, double turnError) {
-        double error = setPoint - previousError + turnError; 
+        double error = setPoint - previousError;// + turnError; 
         
         integral += error * (timer.get() - previousTime);
         double derivative = (error - previousError) / (timer.get() - previousTime);
