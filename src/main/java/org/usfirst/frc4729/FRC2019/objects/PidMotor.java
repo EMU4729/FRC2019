@@ -13,6 +13,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Encoder;
 
 /**
  * Add your docs here.
@@ -29,28 +30,44 @@ public class PidMotor {
     private double integral = 0;
     private double previousTime = 0;
     private double currentSpeed = 0;
+    private Encoder encoder;
 
-    public PidMotor(int motorNum, double kp, double ki, double kd) {
+    public PidMotor(int motorNum, double kp, double ki, double kd, int encoderPortA, int encoderPortB, boolean reverseEncoder) {
         motor = new TalonSRX(motorNum);
         motor.setInverted(false);
         timer = new Timer();
         this.kp = kp;
         this.ki = ki;
         this.kd = kd;
-        timer.start();
+        encoder = new Encoder(encoderPortA, encoderPortB, false, Encoder.EncodingType.k4X);
+    	encoder.setMaxPeriod(0.1);
+        encoder.setMinRate(10);
+        encoder.setDistancePerPulse(0.0762*Math.PI);
+        encoder.setSamplesToAverage(7);
+        encoder.setReverseDirection(false);
     }
 
     public void Update(double setPoint, double turnError) {
-        double error = setPoint - previousError;// + turnError; 
+        if (!hasStarted){
+            hasStarted = true;
+            timer.start();
+        }
+        
+        double error = setPoint - GetEncoderVelocity();// + turnError; 
         
         integral += error * (timer.get() - previousTime);
         double derivative = (error - previousError) / (timer.get() - previousTime);
         currentSpeed = kp * error + ki * integral + kd * derivative;
         previousError = error;
-        motor.set(ControlMode.PercentOutput, currentSpeed);
+        motor.set(ControlMode.PercentOutput, currentSpeed/2);
     }
 
     public double GetCurrentSpeed() {
         return currentSpeed;
     }
+
+    public double GetEncoderVelocity() {
+        return encoder.getRate();
+    }
+    boolean hasStarted;
 }

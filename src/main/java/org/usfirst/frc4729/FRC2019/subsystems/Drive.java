@@ -45,10 +45,10 @@ public class Drive extends Subsystem {
     private double turn;
 
     public Drive(ADXRS450_Gyro gyro) {
-        leftFrontMotor = new PidMotor(6, 0.1, 0, 0);
-        rightFrontMotor = new PidMotor(11, 0.1, 0, 0);      
-        leftBackMotor = new PidMotor(5, 0.1, 0, 0);        
-        rightBackMotor = new PidMotor(12, 0.1, 0, 0);
+        leftFrontMotor = new PidMotor(6, 0.5, 0, 0, 1, 2, false);
+        rightFrontMotor = new PidMotor(11, 0.5, 0, 0, 3, 4, true);      
+        leftBackMotor = new PidMotor(5, 0.5, 0, 0, 5, 6, false);        
+        rightBackMotor = new PidMotor(12, 0.5, 0, 0, 7, 8, true);
 
         this.gyro = gyro;
     }
@@ -112,16 +112,20 @@ public class Drive extends Subsystem {
         double leftBackCurrentSpeed = leftBackMotor.GetCurrentSpeed();
         double rightFrontCurrentSpeed = rightFrontMotor.GetCurrentSpeed();
         double rightBackCurrentSpeed = rightBackMotor.GetCurrentSpeed();
-        double forwardsSpeed = leftFrontCurrentSpeed + leftBackCurrentSpeed - (rightFrontCurrentSpeed + rightBackCurrentSpeed);
-        double sidewaysSpeed = leftFrontCurrentSpeed + rightFrontCurrentSpeed - (leftBackCurrentSpeed + rightBackCurrentSpeed);
-        double turningSpeed = leftFrontCurrentSpeed + rightFrontCurrentSpeed + leftBackCurrentSpeed + rightBackCurrentSpeed;
-        SmartDashboard.putNumber("Forwards current speed", forwardsSpeed);
-        SmartDashboard.putNumber("Sideways current speed", sidewaysSpeed);
-        SmartDashboard.putNumber("Turn current speed", turningSpeed);
-        SmartDashboard.putNumber("Desired forwards", forwards);
-        SmartDashboard.putNumber("Desired sideways", sideways);
-        SmartDashboard.putNumber("Desired turn", turn);
-        SmartDashboard.putBoolean("forwards speed == ", forwardsSpeed == 0);
+        
+        SmartDashboard.putNumber("leftFrontCurrentSpeed", leftFrontCurrentSpeed);
+        SmartDashboard.putNumber("leftBackCurrentSpeed", leftBackCurrentSpeed);
+        SmartDashboard.putNumber("rightFrontCurrentSpeed", rightFrontCurrentSpeed);
+        SmartDashboard.putNumber("rightBackCurrentSpeed", rightBackCurrentSpeed);
+        SmartDashboard.putNumber("leftFront",leftFront);
+        SmartDashboard.putNumber("leftBack",leftBack);
+        SmartDashboard.putNumber("rightFront", rightFront);
+        SmartDashboard.putNumber("rightBack", rightBack);
+        SmartDashboard.putNumber("leftFrontEncoderVelocity", leftFrontMotor.GetEncoderVelocity());
+        SmartDashboard.putNumber("leftBackEncoderVelocity", leftBackMotor.GetEncoderVelocity());
+        SmartDashboard.putNumber("rightFrontEncoderVelocity", rightFrontMotor.GetEncoderVelocity());
+        SmartDashboard.putNumber("rightBackEncoderVelocity", rightBackMotor.GetEncoderVelocity());
+
     }
 }
 
