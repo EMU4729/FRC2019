@@ -61,8 +61,8 @@ public class Drive extends Subsystem {
     
     @Override
     public void periodic() {
-        List<Double> power = Arrays.asList(forwards + sideways + turn,  // leftFront
-                                           forwards - sideways + turn,  // leftBack
+        List<Double> power = Arrays.asList(forwards - sideways + turn,  // leftFront
+                                           forwards + sideways + turn,  // leftBack
                                           -forwards - sideways + turn,  // rightFront
                                           -forwards + sideways + turn); // rightBack
                                           
@@ -91,7 +91,9 @@ public class Drive extends Subsystem {
         this.forwards = forwards;//deadzoneMap(forwardsIn) * SPEED;
         this.sideways = sideways;//deadzoneMap(sidewaysIn) * SPEED;
         this.turn = turn;//deadzoneMap(turn) * SPEED;  
-        DriverStation.reportWarning("Code has been reached", false);
+        SmartDashboard.putNumber("forwards value", this.forwards);
+        SmartDashboard.putNumber("sideways value", this.sideways);
+        SmartDashboard.putNumber("turn value", this.turn);
     }
 
     private double deadzoneMap(double value) {
@@ -108,24 +110,6 @@ public class Drive extends Subsystem {
         leftBackMotor.Update(leftBack, turnError);
         rightFrontMotor.Update(rightFront, turnError);
         rightBackMotor.Update(rightBack, turnError);
-        double leftFrontCurrentSpeed = leftFrontMotor.GetCurrentSpeed();
-        double leftBackCurrentSpeed = leftBackMotor.GetCurrentSpeed();
-        double rightFrontCurrentSpeed = rightFrontMotor.GetCurrentSpeed();
-        double rightBackCurrentSpeed = rightBackMotor.GetCurrentSpeed();
-        
-        SmartDashboard.putNumber("leftFrontCurrentSpeed", leftFrontCurrentSpeed);
-        SmartDashboard.putNumber("leftBackCurrentSpeed", leftBackCurrentSpeed);
-        SmartDashboard.putNumber("rightFrontCurrentSpeed", rightFrontCurrentSpeed);
-        SmartDashboard.putNumber("rightBackCurrentSpeed", rightBackCurrentSpeed);
-        SmartDashboard.putNumber("leftFront",leftFront);
-        SmartDashboard.putNumber("leftBack",leftBack);
-        SmartDashboard.putNumber("rightFront", rightFront);
-        SmartDashboard.putNumber("rightBack", rightBack);
-        SmartDashboard.putNumber("leftFrontEncoderVelocity", leftFrontMotor.GetEncoderVelocity());
-        SmartDashboard.putNumber("leftBackEncoderVelocity", leftBackMotor.GetEncoderVelocity());
-        SmartDashboard.putNumber("rightFrontEncoderVelocity", rightFrontMotor.GetEncoderVelocity());
-        SmartDashboard.putNumber("rightBackEncoderVelocity", rightBackMotor.GetEncoderVelocity());
-
     }
 }
 

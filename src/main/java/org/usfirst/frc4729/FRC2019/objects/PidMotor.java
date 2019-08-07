@@ -39,27 +39,28 @@ public class PidMotor {
         this.kp = kp;
         this.ki = ki;
         this.kd = kd;
-        encoder = new Encoder(encoderPortA, encoderPortB, false, Encoder.EncodingType.k4X);
-    	encoder.setMaxPeriod(0.1);
-        encoder.setMinRate(10);
-        encoder.setDistancePerPulse(0.0762*Math.PI);
-        encoder.setSamplesToAverage(7);
-        encoder.setReverseDirection(false);
+        // encoder = new Encoder(encoderPortA, encoderPortB, false, Encoder.EncodingType.k4X);
+    	// encoder.setMaxPeriod(0.1);
+        // encoder.setMinRate(10);
+        // encoder.setDistancePerPulse(0.0762*Math.PI);
+        // encoder.setSamplesToAverage(7);
+        // encoder.setReverseDirection(false);
     }
 
     public void Update(double setPoint, double turnError) {
-        if (!hasStarted){
-            hasStarted = true;
-            timer.start();
-        }
+       // if (!hasStarted){
+      //      hasStarted = true;
+        //    timer.start();
+       // }
         
-        double error = setPoint - GetEncoderVelocity();// + turnError; 
+       // double error = setPoint - GetEncoderVelocity();// + turnError; 
         
-        integral += error * (timer.get() - previousTime);
+        currentSpeed = setPoint;
+        /*integral += error * (timer.get() - previousTime);
         double derivative = (error - previousError) / (timer.get() - previousTime);
         currentSpeed = kp * error + ki * integral + kd * derivative;
-        previousError = error;
-        motor.set(ControlMode.PercentOutput, currentSpeed/2);
+        previousError = error;*/
+        motor.set(ControlMode.PercentOutput, currentSpeed);
     }
 
     public double GetCurrentSpeed() {
@@ -67,7 +68,7 @@ public class PidMotor {
     }
 
     public double GetEncoderVelocity() {
-        return encoder.getRate();
+        return 0; //encoder.getRate();
     }
     boolean hasStarted;
 }

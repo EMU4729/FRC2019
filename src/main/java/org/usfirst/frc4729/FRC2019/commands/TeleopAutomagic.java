@@ -32,7 +32,7 @@ public class TeleopAutomagic extends CommandGroup {
         // arm.
 
         addSequential(new FollowGaffer());
-        addSequential(new Eject());
+      //  addSequential(new Eject());
         addSequential(new Retreat());
     }
 }

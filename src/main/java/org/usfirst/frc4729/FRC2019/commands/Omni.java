@@ -12,8 +12,7 @@ import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.Joystick;
 
 public class Omni extends Command {
-    Joystick leftStick = new Joystick(0);
-    Joystick rightStick = new Joystick(1);
+    Joystick controller = new Joystick(0);
 
     public Omni() {
         // Use requires() here to declare subsystem dependencies
@@ -29,7 +28,7 @@ public class Omni extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        Robot.drive.omni(-leftStick.getY()*2, leftStick.getX()*2, rightStick.getX());
+        Robot.drive.omni(-controller.getY(), controller.getX(), controller.getRawAxis(4));
     }
 
     // Make this return true when this Command no longer needs to run execute()
